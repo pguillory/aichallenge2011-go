@@ -1,0 +1,6 @@
+*.6
+6.*
+.DS_Store
+MyBot
+_*
+logs
