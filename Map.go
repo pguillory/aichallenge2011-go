@@ -36,9 +36,8 @@ func (this *Map) SeeHill(p Point, owner Player) {
 
 func (this *Map) Update(m *Map) {
     ForEachPoint(func(p Point) {
-        s := this.At(p)
+        s := this.At(p).MinusVisible().MinusAnt()
         s2 := m.At(p)
-        s.contents &= SQUARE_LAND | SQUARE_WATER | SQUARE_FOOD | SQUARE_HILL
         if s2.HasAnt() {
             s = s.PlusAnt(s2.owner)
         }
@@ -48,7 +47,6 @@ func (this *Map) Update(m *Map) {
     ForEachPoint(func(p Point) {
         if this.At(p).HasFriendlyAnt() {
             ForEachPointWithinRadius2(p, viewradius2, func(p2 Point) {
-                //fmt.Println(p2, "is visible")
                 this.SetAt(p2, this.At(p2).PlusVisible())
             })
         }

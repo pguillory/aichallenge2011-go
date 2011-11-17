@@ -32,10 +32,11 @@ func TestIterate(t *testing.T) {
         }
     })
 
-    s := NewScent(m)
+    mystery := NewMystery(m)
+    s := NewScent(m, mystery)
     start := now()
     for i := 0; i < 25; i++ {
-        s = s.Iterate()
+        s.Iterate()
     }
     runtime := now() - start
     if runtime > 150 {

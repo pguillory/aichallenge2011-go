@@ -4,63 +4,72 @@ import "bytes"
 
 type Scent struct {
     m *Map
-    value [MAX_ROWS][MAX_COLS]float64
+    mystery *Mystery
+    value [MAX_ROWS][MAX_COLS]float32
 }
 
-func NewScent(m *Map) *Scent {
-    result := new(Scent)
-    result.m = m
-    return result
+func NewScent(m *Map, mystery *Mystery) *Scent {
+    this := new(Scent)
+    this.m = m
+    this.mystery = mystery
+    return this
 }
 
-func (this *Scent) At(p Point) float64 {
+func (this *Scent) At(p Point) float32 {
     return this.value[p.row][p.col]
 }
 
-func (this *Scent) Transform(f func(p Point) float64) *Scent {
-    result := NewScent(this.m)
-    ForEachPoint(func(p Point) {
-        result.value[p.row][p.col] = f(p)
-    })
-    return result
-}
+func (this *Scent) Iterate() {
+    var newValue [MAX_ROWS][MAX_COLS]float32
 
-func (this *Scent) Iterate() *Scent {
-    return this.Transform(func(p Point) float64 {
+    ForEachPoint(func(p Point) {
+        var v float32
+
         s := this.m.At(p)
         switch {
         case s.HasWater():
-            return 0.0
+            v = 0.0
         case s.HasFriendlyAnt():
-            return 0.0
+            v = 0.0
         case s.HasFriendlyHill():
-            return 0.0
-        }
+            v = 0.0
+        default:
+            v = (this.value[(p.row - 1 + rows) % rows][(p.col           )       ] +
+                 this.value[(p.row           )       ][(p.col - 1 + cols) % cols] +
+                 this.value[(p.row           )       ][(p.col           )       ] +
+                 this.value[(p.row           )       ][(p.col + 1       ) % cols] +
+                 this.value[(p.row + 1       ) % rows][(p.col           )       ]) / 5.0 * 0.95
 
-        v := this.value[(p.row - 1 + rows) % rows   ][p.col                     ] +
-             this.value[p.row                       ][(-1 + p.col + cols) % cols] +
-             this.value[p.row                       ][p.col                     ] +
-             this.value[p.row                       ][(p.col + 1) % cols        ] +
-             this.value[(p.row + 1) % rows          ][p.col                     ]
+            v += this.mystery.At(p) * 10.0
 
-        v *= 0.95 / 5.0
-
-        if s.HasFood() {
-            v += 100.0
-        } else if s.HasEnemyHill() {
-            v += 500.0
-        } else if s.HasAnt() {
-            if s.IsEnemy() {
-                v += 5.0
-            } else {
-                //ForEachNeighbor(p, func(p2 Point) {
-                //    
-                //})
+            if s.HasFood() {
+                v += 100.0
+            } else if s.HasEnemyHill() {
+                v += 500.0
+            } else if s.HasAnt() {
+                if s.IsEnemy() {
+                    v += 5.0
+                } else {
+                    //ForEachNeighbor(p, func(p2 Point) {
+                    //    
+                    //})
+                }
             }
         }
-        return v
+
+        newValue[p.row][p.col] = v
     })
+
+    this.value = newValue
 }
+
+/*
+func (this *Scent) Stabilize() {
+    for i := 0; i < 100; i++ {
+        scent.Iterate()
+    }
+}
+*/
 
 func (this *Scent) String() string {
     b := new(bytes.Buffer)

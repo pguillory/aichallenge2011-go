@@ -1,7 +1,5 @@
 package main
 
-import "time"
-
 const (
     MAX_ROWS = 200
     MAX_COLS = 200
@@ -29,8 +27,4 @@ func normalize_col(col int) int {
         col += cols
     }
     return col % cols
-}
-
-func now() int64 {
-    return time.Nanoseconds() / 1000000
 }

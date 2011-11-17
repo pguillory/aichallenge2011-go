@@ -1,0 +1,10 @@
+/*
+func (this *Scent) Transform(f func(p Point) float32) *Scent {
+    result := NewScent(this.m)
+    ForEachPoint(func(p Point) {
+        result.value[p.row][p.col] = f(p)
+    })
+    return result
+}
+*/
+

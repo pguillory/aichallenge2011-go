@@ -7,6 +7,8 @@ import "strings"
 import "strconv"
 import "fmt"
 
+var debugMode = true
+
 func main() {
 	var bot Bot
 

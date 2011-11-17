@@ -14,8 +14,8 @@ func (this Point) Normalize() (result Point) {
 }
 
 func (this Point) Plus(p Point) (result Point) {
-    result.row = normalize_row(this.row + p.row)
-    result.col = normalize_col(this.col + p.col)
+    result.row = (this.row + p.row + rows) % rows
+    result.col = (this.col + p.col + cols) % cols
     return
 }
 
@@ -30,14 +30,16 @@ func (this Point) IsOrigin() bool {
 func (this Point) Distance2(p Point) int {
     var abs1, abs2, dr, dc int
 
-    abs1 = this.row - p.row
-    if (abs1 < 0) {
-        abs1 = -abs1
+    if (this.row > p.row) {
+        abs1 = this.row - p.row
+    } else {
+        abs1 = p.row - this.row
     }
 
-    abs2 = rows - abs1
-    if (abs2 < 0) {
-        abs2 = -abs2
+    if (rows > abs1) {
+        abs2 = rows - abs1
+    } else {
+        abs2 = abs1 - rows
     }
 
     if abs1 < abs2 {
@@ -46,14 +48,16 @@ func (this Point) Distance2(p Point) int {
         dr = abs2
     }
 
-    abs1 = this.col - p.col
-    if (abs1 < 0) {
-        abs1 = -abs1
+    if (this.col > p.col) {
+        abs1 = this.col - p.col
+    } else {
+        abs1 = p.col - this.col
     }
 
-    abs2 = cols - abs1
-    if (abs2 < 0) {
-        abs2 = -abs2
+    if (cols > abs1) {
+        abs2 = cols - abs1
+    } else {
+        abs2 = abs1 - cols
     }
 
     if abs1 < abs2 {
@@ -68,13 +72,13 @@ func (this Point) Distance2(p Point) int {
 func (this Point) Neighbor(dir Direction) Point {
     switch dir {
     case NORTH:
-        this.row = normalize_row(this.row - 1)
+        this.row = (this.row - 1 + rows) % rows
     case EAST:
-        this.col = normalize_col(this.col + 1)
+        this.col = (this.col + 1       ) % cols
     case SOUTH:
-        this.row = normalize_row(this.row + 1)
+        this.row = (this.row + 1       ) % rows
     case WEST:
-        this.col = normalize_col(this.col - 1)
+        this.col = (this.col - 1 + cols) % cols
     }
     return this
 }
@@ -86,19 +90,18 @@ func (this Point) String() string {
 func ForEachPoint(f func(Point)) {
     var p Point
     for p.row = 0; p.row < rows; p.row++ {
-        for p.col = 0; p.col < cols; p.col++ {
-            f(p)
-        }
+    for p.col = 0; p.col < cols; p.col++ {
+        f(p)
+    }
     }
 }
 
 func ForEachPointWithinManhattanDistance(p Point, distance int, f func(Point)) {
     var d, s Point
     for d.row, s.row = -distance, 0; d.row <= distance && s.row < rows; d.row, s.row = d.row + 1, s.row + 1 {
-        for d.col, s.col = -distance, 0; d.col <= distance && s.col < cols; d.col, s.col = d.col + 1, s.col + 1 {
-            p2 := p.Plus(d)
-            f(p2)
-        }
+    for d.col, s.col = -distance, 0; d.col <= distance && s.col < cols; d.col, s.col = d.col + 1, s.col + 1 {
+        f(p.Plus(d))
+    }
     }
 }
 
@@ -112,14 +115,20 @@ func ForEachPointWithinRadius2(p Point, radius2 int, f func(Point)) {
 }
 
 func ForEachNeighbor(p Point, f func(Point)) {
+    f(p.Neighbor(NORTH))
+    f(p.Neighbor(EAST))
+    f(p.Neighbor(SOUTH))
+    f(p.Neighbor(WEST))
+    f(p.Neighbor(STAY))
 /*
     var dir Direction
     for dir = 1; dir <= STAY; dir *= 2 {
-        p2 := p.Neighbor(dir)
-        f(p2)
+        f(p.Neighbor(dir))
     }
 */
+/*
     ForEachDirection(func(dir Direction) {
         f(p.Neighbor(dir))
     })
+*/
 }

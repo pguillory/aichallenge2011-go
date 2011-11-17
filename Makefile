@@ -8,9 +8,12 @@ GOFILES=\
 	Player.go\
 	Square.go\
 	Map.go\
+	Mystery.go\
 	Scent.go\
 	Moves.go\
 	Bot.go\
 	MyBot.go\
+	Timer.go\
+	Log.go\
 
 include $(GOROOT)/src/Make.cmd

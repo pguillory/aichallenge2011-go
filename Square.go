@@ -129,11 +129,3 @@ func (this Square) MinusHill() Square {
     this.contents &= ^SQUARE_HILL
     return this
 }
-
-/*
-func (this Square) Assimilate(s Square) Square {
-    this.contents &= SQUARE_LAND | SQUARE_WATER | SQUARE_FOOD | SQUARE_HILL
-    this.owner = s.owner
-    return this
-}
-*/

@@ -7,10 +7,11 @@ cd `dirname $0`
 cd ../tools
 # --player_seed 42 
 # --map_file maps/test.map \
-nice -n 15 ./playgame.py --end_wait=0.25 --verbose --log_dir game_logs --turns $turns --turntime 20000 \
+nice -n 15 ./playgame.py --end_wait=0.25 --verbose --log_dir game_logs --turns $turns --turntime 25000 \
  --fill \
  --map_file maps/maze/maze_5.map \
  "$@" \
+ "python sample_bots/python/LeftyBot.py" \
  "../go/MyBot"
 
  # "python sample_bots/python/HunterBot.py" \
