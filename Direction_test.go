@@ -18,6 +18,6 @@ func TestForEachDirection(t *testing.T) {
         seen[dir.String()] = 1
     })
     if (len(seen) != 5 || seen["N"] != 1 || seen["E"] != 1 || seen["S"] != 1 || seen["W"] != 1 || seen["X"] != 1) {
-        t.Errorf("%v", seen)
+        t.Error(seen)
     }
 }

@@ -9,6 +9,6 @@ func TestTimer(t *testing.T) {
     time.Sleep(10 * 1000000)
     timer.Stop()
     if timer.times[0] < 10 || timer.times[0] > 11 {
-        t.Errorf("%v", timer)
+        t.Error(timer)
     }
 }

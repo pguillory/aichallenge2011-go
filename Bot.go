@@ -11,15 +11,18 @@ type Bot struct {
     m *Map
     update *Map
     mystery *Mystery
-    scent *Scent
+    workerScent, soldierScent *Scent
+    army *Army
     moves *Moves
 }
 
 func (this *Bot) Ready() {
     this.m = new(Map)
     this.mystery = NewMystery(this.m)
-    this.scent = NewScent(this.m, this.mystery)
-    this.moves = NewMoves(this.m, this.scent)
+    this.workerScent = NewScent(this.m, this.mystery)
+    this.soldierScent = NewScent(this.m, this.mystery)
+    this.army = NewArmy(this.m)
+    this.moves = NewMoves(this.m, this.workerScent, this.soldierScent, this.army)
 }
 
 func (this *Bot) Turn() {
@@ -58,8 +61,13 @@ func (this *Bot) Go() []Order {
 
     timer.Start("scent")
     for i := 0; i < 10; i++ {
-        this.scent.Iterate()
+        this.workerScent.Iterate()
+        this.soldierScent.IterateSoldier()
     }
+    timer.Stop()
+
+    timer.Start("army")
+    this.army.Iterate()
     timer.Stop()
 
     timer.Start("moves")
@@ -77,9 +85,57 @@ func (this *Bot) Go() []Order {
     timer.Stop()
 
     if debugMode {
-        NewLog("time", "log").File().WriteString(fmt.Sprintf("%v\n", timer.String()))
+        hud := NewLog("hud", "log").File()
+        hud.WriteString(fmt.Sprintf("%v\nturn %v, times %v\n", this.ColorString(), turn, timer.String()))
         NewLog("map", "log").TurnFile().WriteString(this.m.String())
+        NewLog("army", "log").TurnFile().WriteString(this.army.String())
     }
 
     return orders
+}
+
+func (this *Bot) ColorString() string {
+    return GridToColorString(func(p Point) ColorChar {
+        s := this.m.At(p)
+
+        background := BLACK + HIGH_INTENSITY
+        if s.IsVisible() {
+            background -= HIGH_INTENSITY
+        }
+
+        style := 0
+        if this.army.IsSoldierAt(p) {
+            style = UNDERLINE
+        }
+
+        switch {
+        case s.HasLand():
+            switch {
+            case s.HasFood():
+                return ColorChar{'*', YELLOW, background, style}
+            case s.HasAnt() && s.HasHill():
+                if s.IsFriendly() {
+                    return ColorChar{'A' + byte(s.owner), HIGH_INTENSITY + GREEN, background, style}
+                } else {
+                    return ColorChar{'A' + byte(s.owner), RED, background, style}
+                }
+            case s.HasAnt():
+                if s.IsFriendly() {
+                    return ColorChar{'a' + byte(s.owner), GREEN, background, style}
+                } else {
+                    return ColorChar{'a' + byte(s.owner), RED, background, style}
+                }
+            case s.HasHill():
+                if s.IsFriendly() {
+                    return ColorChar{'0' + byte(s.owner), HIGH_INTENSITY + GREEN, background, style}
+                } else {
+                    return ColorChar{'0' + byte(s.owner), RED, background, style}
+                }
+            }
+            return ColorChar{'.', HIGH_INTENSITY + BLACK, background, style}
+        case s.HasWater():
+            return ColorChar{'%', BLUE, background, style}
+        }
+        return ColorChar{'?', WHITE, background, style}
+    })
 }

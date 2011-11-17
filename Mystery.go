@@ -1,7 +1,5 @@
 package main
 
-/*import "bytes"*/
-
 type Mystery struct {
     m *Map
     value [MAX_ROWS][MAX_COLS]float32

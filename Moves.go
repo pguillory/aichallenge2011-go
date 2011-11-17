@@ -31,28 +31,40 @@ func (this MoveSet) Swap(i, j int) {
 
 type Moves struct {
     m *Map
-    scent *Scent
+    workerScent, soldierScent *Scent
+    army *Army
     dirs [MAX_ROWS][MAX_COLS]Direction
-    //moves []Move
     len int
 }
 
-func NewMoves(m *Map, scent *Scent) *Moves {
+func NewMoves(m *Map, workerScent, soldierScent *Scent, army *Army) *Moves {
     this := new(Moves)
     this.m = m
-    this.scent = scent
+    this.workerScent = workerScent
+    this.soldierScent = soldierScent
+    this.army = army
     return this
+}
+
+func (this *Moves) Reset() {
+    ForEachPoint(func(p Point) {
+        if this.m.At(p).HasFriendlyAnt() {
+            this.dirs[p.row][p.col] = NORTH | EAST | SOUTH | WEST | STAY
+        } else {
+            this.dirs[p.row][p.col] = 0
+        }
+    })
+
+    ForEachPoint(func(p Point) {
+        if this.m.At(p).HasWater() || this.m.At(p).HasFood() {
+            this.ExcludeMovesTo(p)
+        }
+    })
 }
 
 func (this *Moves) At(p Point) Direction {
     return this.dirs[p.row][p.col]
 }
-
-/*
-func (this *Moves) Include(p Point, dir Direction) {
-    this.dirs[p.row][p.col] |= dir
-}
-*/
 
 func (this *Moves) Exclude(p Point, dir Direction) {
     if this.dirs[p.row][p.col] & dir > 0 {
@@ -73,67 +85,31 @@ func (this *Moves) Select(p Point, dir Direction) {
 }
 
 func (this *Moves) ExcludeMovesTo(p Point) {
-    ForEachDirection(func(dir Direction) {
-        this.Exclude(p.Neighbor(dir), dir.Backward())
-    })
+    this.Exclude(p, STAY)
+    this.Exclude(p.Neighbor(NORTH), SOUTH)
+    this.Exclude(p.Neighbor(EAST), WEST)
+    this.Exclude(p.Neighbor(SOUTH), NORTH)
+    this.Exclude(p.Neighbor(WEST), EAST)
+}
+
+func (this *Moves) MoveValue(p Point, dir Direction) float32 {
+    p2 := p.Neighbor(dir)
+
+    if this.army.IsSoldierAt(p) {
+        return this.soldierScent.At(p2) - this.soldierScent.At(p)
+    }
+
+    return this.workerScent.At(p2) - this.workerScent.At(p)
 }
 
 func (this *Moves) PickBestMovesByScent() {
-    var best_value, worst_value float32
-    var best_p, worst_p Point
-    var best_dir, worst_dir Direction
-
-    for i := 0; i < rows * cols; i++ {
-        found := false
-
-        ForEachPoint(func(p Point) {
-            switch this.At(p) {
-            case 0:
-            case NORTH:
-            case EAST:
-            case SOUTH:
-            case WEST:
-            case STAY:
-            default:
-                ForEachDirection(func(dir Direction) {
-                    if this.At(p) & dir > 0 {
-                        value := this.scent.At(p.Neighbor(dir)) - this.scent.At(p)
-
-                        if !found || best_value < value {
-                            best_value = value
-                            best_p = p
-                            best_dir = dir
-                        }
-
-                        if !found || worst_value > value {
-                            worst_value = value
-                            worst_p = p
-                            worst_dir = dir
-                        }
-
-                        found = true
-                    }
-                })
-            }
-        })
-
-        if found {
-            this.Select(best_p, best_dir)
-            this.Exclude(worst_p, worst_dir)
-        } else {
-            break
-        }
-    }
-}
-
-func (this *Moves) PickBestMovesByScent2() {
     moves := make(MoveSet, 0)
 
     ForEachPoint(func(p Point) {
         if this.At(p).IsMultiple() {
             ForEachDirection(func(dir Direction) {
                 if this.At(p).Includes(dir) {
-                    moves = append(moves, Move{p, dir, this.scent.At(p.Neighbor(dir)) - this.scent.At(p)})
+                    moves = append(moves, Move{p, dir, this.MoveValue(p, dir)})
                 }
             })
         }
@@ -145,7 +121,7 @@ func (this *Moves) PickBestMovesByScent2() {
     i := 0
     j := len(moves) - 1
     for i < j {
-        for this.At(moves[j].p) & moves[j].dir == 0 {
+        for this.At(moves[j].p).Includes(moves[j].dir) == false {
             j--
             if i > j {
                 return
@@ -157,7 +133,7 @@ func (this *Moves) PickBestMovesByScent2() {
             return
         }
 
-        for this.At(moves[i].p) & moves[i].dir == 0 {
+        for this.At(moves[i].p).Includes(moves[i].dir) == false {
             i++
             if i > j {
                 return
@@ -165,40 +141,13 @@ func (this *Moves) PickBestMovesByScent2() {
         }
         this.Exclude(moves[i].p, moves[i].dir)
         i++
-
-/*
-        worst := moves[0]
-        for this.At(worst.p) & worst.dir == 0 {
-            moves = moves[1:]
-            if len(moves) == 0 {
-                break
-            }
-            worst = moves[0]
-        }
-        this.Exclude(worst.p, worst.dir)
-        moves = moves[1:]
-*/
     }
 }
 
 func (this *Moves) Calculate() {
-    ForEachPoint(func(p Point) {
-        this.dirs[p.row][p.col] = 0
-        if this.m.At(p).HasFriendlyAnt() {
-            ForEachDirection(func(dir Direction) {
-                //this.Include(p, dir)
-                this.dirs[p.row][p.col] |= dir
-            })
-        }
-    })
+    this.Reset()
 
-    ForEachPoint(func(p Point) {
-        if this.m.At(p).HasWater() || this.m.At(p).HasFood() {
-            this.ExcludeMovesTo(p)
-        }
-    })
-
-    this.PickBestMovesByScent2()
+    this.PickBestMovesByScent()
 }
 
 func (this *Moves) String() string {

@@ -4,7 +4,7 @@ import "testing"
 
 func TestFromString(t *testing.T) {
     s := "?.%*\naB2?"
-    m := MapFromString(s)
+    m := NewMap(s)
     s2 := m.String()
     if s != s2 {
         t.Errorf("%#v != %#v", s, s2)

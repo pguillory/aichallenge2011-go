@@ -7,24 +7,20 @@ type Point struct {
     row, col int
 }
 
-func (this Point) Normalize() (result Point) {
-    result.row = normalize_row(this.row)
-    result.col = normalize_col(this.col)
-    return
+func (this Point) Normalize() Point {
+    this.row = normalize_row(this.row)
+    this.col = normalize_col(this.col)
+    return this
 }
 
-func (this Point) Plus(p Point) (result Point) {
-    result.row = (this.row + p.row + rows) % rows
-    result.col = (this.col + p.col + cols) % cols
-    return
+func (this Point) Plus(p Point) Point {
+    this.row = (this.row + p.row + rows) % rows
+    this.col = (this.col + p.col + cols) % cols
+    return this
 }
 
 func (this Point) Equals(p Point) bool {
     return (this.row == p.row && this.col == p.col)
-}
-
-func (this Point) IsOrigin() bool {
-    return (this.row == 0 && this.col == 0)
 }
 
 func (this Point) Distance2(p Point) int {
@@ -90,18 +86,18 @@ func (this Point) String() string {
 func ForEachPoint(f func(Point)) {
     var p Point
     for p.row = 0; p.row < rows; p.row++ {
-    for p.col = 0; p.col < cols; p.col++ {
-        f(p)
-    }
+        for p.col = 0; p.col < cols; p.col++ {
+            f(p)
+        }
     }
 }
 
 func ForEachPointWithinManhattanDistance(p Point, distance int, f func(Point)) {
     var d, s Point
     for d.row, s.row = -distance, 0; d.row <= distance && s.row < rows; d.row, s.row = d.row + 1, s.row + 1 {
-    for d.col, s.col = -distance, 0; d.col <= distance && s.col < cols; d.col, s.col = d.col + 1, s.col + 1 {
-        f(p.Plus(d))
-    }
+        for d.col, s.col = -distance, 0; d.col <= distance && s.col < cols; d.col, s.col = d.col + 1, s.col + 1 {
+            f(p.Plus(d))
+        }
     }
 }
 
@@ -120,15 +116,4 @@ func ForEachNeighbor(p Point, f func(Point)) {
     f(p.Neighbor(SOUTH))
     f(p.Neighbor(WEST))
     f(p.Neighbor(STAY))
-/*
-    var dir Direction
-    for dir = 1; dir <= STAY; dir *= 2 {
-        f(p.Neighbor(dir))
-    }
-*/
-/*
-    ForEachDirection(func(dir Direction) {
-        f(p.Neighbor(dir))
-    })
-*/
 }

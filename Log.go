@@ -19,8 +19,8 @@ func NewLog(name string, ext string) *Log {
 }
 
 func (this *Log) File() *os.File {
-    dirname := fmt.Sprintf("games/%v", GAMEID)
-    basename := fmt.Sprintf("%04v.%v", this.name, this.ext)
+    dirname := fmt.Sprintf("../games/%v", GAMEID)
+    basename := fmt.Sprintf("%v.%v", this.name, this.ext)
     filename := dirname + "/" + basename
     os.MkdirAll(dirname, 0700)
     file, err := os.OpenFile(filename, os.O_WRONLY | os.O_CREATE | os.O_APPEND, 0600)
@@ -31,7 +31,7 @@ func (this *Log) File() *os.File {
 }
 
 func (this *Log) TurnFile() *os.File {
-    dirname := fmt.Sprintf("games/%v/%v", GAMEID, this.name)
+    dirname := fmt.Sprintf("../games/%v/%v", GAMEID, this.name)
     basename := fmt.Sprintf("%04v.%v", turn, this.ext)
     filename := dirname + "/" + basename
     os.MkdirAll(dirname, 0700)

@@ -109,8 +109,9 @@ func (this Direction) String() string {
 }
 
 func ForEachDirection(f func(Direction)) {
-    var dir Direction
-    for dir = 1; dir <= STAY; dir *= 2 {
-        f(dir)
-    }
+    f(NORTH)
+    f(EAST)
+    f(SOUTH)
+    f(WEST)
+    f(STAY)
 }

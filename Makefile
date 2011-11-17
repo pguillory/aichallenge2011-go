@@ -10,10 +10,12 @@ GOFILES=\
 	Map.go\
 	Mystery.go\
 	Scent.go\
+	Army.go\
 	Moves.go\
 	Bot.go\
 	MyBot.go\
 	Timer.go\
 	Log.go\
+	toString.go\
 
 include $(GOROOT)/src/Make.cmd

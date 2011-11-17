@@ -4,7 +4,7 @@ import "testing"
 
 func TestIterate(t *testing.T) {
 /*
-    m := MapFromString(
+    m := NewMap(
     ".......................................\n" +
     ".......................................\n" +
     ".......................................\n" +
@@ -33,10 +33,10 @@ func TestIterate(t *testing.T) {
     })
 
     mystery := NewMystery(m)
-    s := NewScent(m, mystery)
+    scent := NewScent(m, mystery)
     start := now()
     for i := 0; i < 25; i++ {
-        s.Iterate()
+        scent.Iterate()
     }
     runtime := now() - start
     if runtime > 150 {

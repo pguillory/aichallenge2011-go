@@ -3,22 +3,27 @@ package main
 import "testing"
 
 func TestMoves(t *testing.T) {
-    m := MapFromString(
+    m := NewMap(
     "a%...%*%\n" +
     ".%.%.%.%\n" +
     ".%.%.%.%\n" +
     ".......%\n" +
     "%%%%%%%%")
     mystery := NewMystery(m)
-    scent := NewScent(m, mystery)
-    moves := NewMoves(m, scent)
+    workerScent := NewScent(m, mystery)
+    soldierScent := NewScent(m, mystery)
+    army := NewArmy(m)
+    moves := NewMoves(m, workerScent, soldierScent, army)
     for i := 0; i < 20; i++ {
-        scent.Iterate()
+        workerScent.Iterate()
+        soldierScent.IterateSoldier()
     }
+    army.Iterate()
     moves.Calculate()
     if moves.At(Point{0, 0}) != SOUTH {
-        t.Errorf("%v", scent)
-        t.Errorf("%v", moves)
-        t.Errorf("%v %v", scent.At(Point{0, 0}), scent.At(Point{1, 0}))
+        t.Error(workerScent)
+        t.Error(soldierScent)
+        t.Error(moves)
+        t.Errorf("%v %v", workerScent.At(Point{0, 0}), workerScent.At(Point{1, 0}))
     }
 }
