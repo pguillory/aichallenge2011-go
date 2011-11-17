@@ -34,10 +34,16 @@ func (this *Timer) Stop() {
     //this.times[this.currentName] = end - this.start
 }
 
+func (this *Timer) ForEach(f func(string, int64)) {
+    for i, name := range this.names {
+        f(name, this.times[i])
+    }
+}
+
 func (this *Timer) String() string {
     b := new(bytes.Buffer)
-    for i, name := range this.names {
-        b.WriteString(fmt.Sprintf("%v:%v ", name, this.times[i]))
-    }
+    this.ForEach(func(name string, runtime int64) {
+        b.WriteString(fmt.Sprintf("%v:%v ", name, runtime))
+    })
     return b.String()
 }

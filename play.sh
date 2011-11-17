@@ -11,8 +11,10 @@ nice -n 15 ./playgame.py --end_wait=0.25 --verbose --log_dir game_logs --turns $
  --fill \
  --map_file maps/maze/maze_5.map \
  "$@" \
+ "../go/MyBot" \
+ "../go/cbot" \
  "python sample_bots/python/LeftyBot.py" \
- "../go/MyBot"
+
 
  # "python sample_bots/python/HunterBot.py" \
  # "python sample_bots/python/LeftyBot.py" \

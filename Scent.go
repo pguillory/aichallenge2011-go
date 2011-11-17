@@ -1,14 +1,14 @@
 package main
 
 type Scent struct {
-    m *Map
+    terrain *Terrain
     mystery *Mystery
     value [MAX_ROWS][MAX_COLS]float32
 }
 
-func NewScent(m *Map, mystery *Mystery) *Scent {
+func NewScent(terrain *Terrain, mystery *Mystery) *Scent {
     this := new(Scent)
-    this.m = m
+    this.terrain = terrain
     this.mystery = mystery
     return this
 }
@@ -17,13 +17,13 @@ func (this *Scent) At(p Point) float32 {
     return this.value[p.row][p.col]
 }
 
-func (this *Scent) Iterate() {
+func (this *Scent) Calculate() {
     var newValue [MAX_ROWS][MAX_COLS]float32
 
     ForEachPoint(func(p Point) {
         var v float32
 
-        s := this.m.At(p)
+        s := this.terrain.At(p)
         switch {
         case s.HasWater():
             v = 0.0
@@ -61,13 +61,13 @@ func (this *Scent) Iterate() {
     this.value = newValue
 }
 
-func (this *Scent) IterateSoldier() {
+func (this *Scent) CalculateSoldier() {
     var newValue [MAX_ROWS][MAX_COLS]float32
 
     ForEachPoint(func(p Point) {
         var v float32
 
-        s := this.m.At(p)
+        s := this.terrain.At(p)
         switch {
         case s.HasWater():
             v = 0.0
@@ -103,7 +103,7 @@ func (this *Scent) IterateSoldier() {
 
 func (this *Scent) String() string {
     return GridToString(func(p Point) byte {
-        square := this.m.At(p)
+        square := this.terrain.At(p)
         switch {
         case square.HasFood():
             return '*'

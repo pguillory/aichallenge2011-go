@@ -1,32 +1,32 @@
 package main
 
 import "fmt"
-
-type Order struct {
-    row, col int
-    dir byte
-}
+import "os"
 
 type Bot struct {
-    m *Map
-    update *Map
+    terrain *Terrain
+    update *Terrain
     mystery *Mystery
     workerScent, soldierScent *Scent
     army *Army
-    moves *Moves
+    command *Command
+    hud *os.File
 }
 
 func (this *Bot) Ready() {
-    this.m = new(Map)
-    this.mystery = NewMystery(this.m)
-    this.workerScent = NewScent(this.m, this.mystery)
-    this.soldierScent = NewScent(this.m, this.mystery)
-    this.army = NewArmy(this.m)
-    this.moves = NewMoves(this.m, this.workerScent, this.soldierScent, this.army)
+    this.terrain = new(Terrain)
+    this.mystery = NewMystery(this.terrain)
+    this.workerScent = NewScent(this.terrain, this.mystery)
+    this.soldierScent = NewScent(this.terrain, this.mystery)
+    this.army = NewArmy(this.terrain)
+    this.command = NewCommand(this.terrain, this.workerScent, this.soldierScent, this.army)
+    if debugMode {
+        this.hud = NewLog("hud", "log")
+    }
 }
 
 func (this *Bot) Turn() {
-    this.update = new(Map)
+    this.update = new(Terrain)
 }
 
 func (this *Bot) SeeWater(row, col int) {
@@ -52,43 +52,40 @@ func (this *Bot) Go() []Order {
     timer := NewTimer()
 
     timer.Start("map")
-    this.m.Update(this.update)
+    this.terrain.Update(this.update)
     timer.Stop()
 
     timer.Start("mystery")
-    this.mystery.Iterate()
+    this.mystery.Calculate()
     timer.Stop()
 
     timer.Start("scent")
-    for i := 0; i < 10; i++ {
-        this.workerScent.Iterate()
-        this.soldierScent.IterateSoldier()
+    for i := 0; i < 25; i++ {
+        this.workerScent.Calculate()
+        this.soldierScent.CalculateSoldier()
     }
     timer.Stop()
 
     timer.Start("army")
-    this.army.Iterate()
+    this.army.Calculate()
     timer.Stop()
 
-    timer.Start("moves")
-    this.moves.Calculate()
+    timer.Start("command")
+    this.command.Calculate()
     timer.Stop()
 
     timer.Start("bot")
-    orders := make([]Order, 0)
-    ForEachPoint(func(p Point) {
-        c := this.moves.At(p).Char()
-        if (c == 'N' || c == 'E' || c == 'S' || c == 'W') {
-            orders = append(orders, Order{p.row, p.col, c})
-        }
+    orders := make([]Order, 1000)
+    this.command.ForEach(func(move Move) {
+        orders = append(orders, Order{move.from.row, move.from.col, move.dir.Char()})
     })
     timer.Stop()
 
     if debugMode {
-        hud := NewLog("hud", "log").File()
-        hud.WriteString(fmt.Sprintf("%v\nturn %v, times %v\n", this.ColorString(), turn, timer.String()))
-        NewLog("map", "log").TurnFile().WriteString(this.m.String())
-        NewLog("army", "log").TurnFile().WriteString(this.army.String())
+        this.hud.WriteString(fmt.Sprintf("%v\n", this.ColorString()))
+        this.hud.WriteString(fmt.Sprintf("turn %v, times %v\n", turn, timer.String()))
+        NewTurnLog("map", "log").WriteString(this.terrain.String())
+        NewTurnLog("army", "log").WriteString(this.army.String())
     }
 
     return orders
@@ -96,7 +93,7 @@ func (this *Bot) Go() []Order {
 
 func (this *Bot) ColorString() string {
     return GridToColorString(func(p Point) ColorChar {
-        s := this.m.At(p)
+        s := this.terrain.At(p)
 
         background := BLACK + HIGH_INTENSITY
         if s.IsVisible() {
@@ -115,9 +112,9 @@ func (this *Bot) ColorString() string {
                 return ColorChar{'*', YELLOW, background, style}
             case s.HasAnt() && s.HasHill():
                 if s.IsFriendly() {
-                    return ColorChar{'A' + byte(s.owner), HIGH_INTENSITY + GREEN, background, style}
+                    return ColorChar{'a' + byte(s.owner), BLACK, HIGH_INTENSITY + GREEN, style}
                 } else {
-                    return ColorChar{'A' + byte(s.owner), RED, background, style}
+                    return ColorChar{'a' + byte(s.owner), RED, background, style}
                 }
             case s.HasAnt():
                 if s.IsFriendly() {
@@ -127,9 +124,9 @@ func (this *Bot) ColorString() string {
                 }
             case s.HasHill():
                 if s.IsFriendly() {
-                    return ColorChar{'0' + byte(s.owner), HIGH_INTENSITY + GREEN, background, style}
+                    return ColorChar{' ' + byte(s.owner), BLACK, HIGH_INTENSITY + GREEN, style}
                 } else {
-                    return ColorChar{'0' + byte(s.owner), RED, background, style}
+                    return ColorChar{' ' + byte(s.owner), RED, background, style}
                 }
             }
             return ColorChar{'.', HIGH_INTENSITY + BLACK, background, style}

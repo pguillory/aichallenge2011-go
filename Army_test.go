@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestArmy(t *testing.T) {
-    m := NewMap(
+    terrain := NewTerrain(
         "..aa........*.............\n" +
         "...aa..............a......\n" +
         "...........a..........a...\n" +
@@ -27,8 +27,8 @@ func TestArmy(t *testing.T) {
         "................y.Q.......\n" +
         "..................Q.......\n" +
         ".........................."
-    army := NewArmy(m)
-    army.Iterate()
+    army := NewArmy(terrain)
+    army.Calculate()
     if army.String() != expected {
         t.Error(army)
     }

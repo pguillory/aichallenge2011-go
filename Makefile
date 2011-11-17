@@ -7,11 +7,13 @@ GOFILES=\
 	Point.go\
 	Player.go\
 	Square.go\
-	Map.go\
+	Terrain.go\
 	Mystery.go\
 	Scent.go\
 	Army.go\
-	Moves.go\
+	MoveSet.go\
+	OrderedMoveList.go\
+	Command.go\
 	Bot.go\
 	MyBot.go\
 	Timer.go\

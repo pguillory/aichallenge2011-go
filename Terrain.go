@@ -1,11 +1,11 @@
 package main
 
-type Map struct {
+type Terrain struct {
     squares [MAX_ROWS][MAX_COLS]Square
 }
 
-func NewMap(input string) *Map {
-    this := new(Map)
+func NewTerrain(input string) *Terrain {
+    this := new(Terrain)
 
     rows = 0
     cols = 0
@@ -47,34 +47,34 @@ func NewMap(input string) *Map {
     return this
 }
 
-func (this *Map) At(p Point) Square {
+func (this *Terrain) At(p Point) Square {
     return this.squares[p.row][p.col]
 }
 
-func (this *Map) SeeWater(p Point) {
+func (this *Terrain) SeeWater(p Point) {
     this.squares[p.row][p.col] = this.At(p).PlusVisible().PlusWater()
 }
 
-func (this *Map) SeeLand(p Point) {
+func (this *Terrain) SeeLand(p Point) {
     this.squares[p.row][p.col] = this.At(p).PlusVisible().PlusLand()
 }
 
-func (this *Map) SeeFood(p Point) {
+func (this *Terrain) SeeFood(p Point) {
     this.squares[p.row][p.col] = this.At(p).PlusVisible().PlusLand().PlusFood()
 }
 
-func (this *Map) SeeAnt(p Point, owner Player) {
+func (this *Terrain) SeeAnt(p Point, owner Player) {
     this.squares[p.row][p.col] = this.At(p).PlusVisible().PlusLand().PlusAnt(owner)
 }
 
-func (this *Map) SeeHill(p Point, owner Player) {
+func (this *Terrain) SeeHill(p Point, owner Player) {
     this.squares[p.row][p.col] = this.At(p).PlusVisible().PlusLand().PlusHill(owner)
 }
 
-func (this *Map) Update(m *Map) {
+func (this *Terrain) Update(terrain *Terrain) {
     ForEachPoint(func(p Point) {
         s := this.At(p).MinusVisible().MinusAnt()
-        s2 := m.At(p)
+        s2 := terrain.At(p)
         if s2.HasAnt() {
             s = s.PlusAnt(s2.owner)
         }
@@ -93,7 +93,7 @@ func (this *Map) Update(m *Map) {
         s := this.At(p)
 
         if s.IsVisible() {
-            s2 := m.At(p)
+            s2 := terrain.At(p)
 
             if s2.HasWater() {
                 s = s.PlusWater()
@@ -118,7 +118,7 @@ func (this *Map) Update(m *Map) {
     })
 }
 
-func (this *Map) String() string {
+func (this *Terrain) String() string {
     return GridToString(func(p Point) byte {
         s := this.At(p)
         switch {

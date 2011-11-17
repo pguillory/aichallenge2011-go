@@ -7,6 +7,11 @@ import "strings"
 import "strconv"
 import "fmt"
 
+type Order struct {
+    row, col int
+    dir byte
+}
+
 var debugMode = true
 
 func main() {

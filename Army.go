@@ -1,14 +1,14 @@
 package main
 
 type Army struct {
-    m *Map
+    terrain *Terrain
     values [MAX_ROWS][MAX_COLS]uint16
     counts [MAX_ROWS * MAX_COLS / 2]uint16
 }
 
-func NewArmy(m *Map) *Army {
+func NewArmy(terrain *Terrain) *Army {
     this := new(Army)
-    this.m = m
+    this.terrain = terrain
     return this
 }
 
@@ -38,11 +38,11 @@ func (this *Army) Spread(p Point) {
     })
 }
 
-func (this *Army) Iterate() {
+func (this *Army) Calculate() {
     var a uint16
 
     ForEachPoint(func(p Point) {
-        if this.m.At(p).HasFriendlyAnt() {
+        if this.terrain.At(p).HasFriendlyAnt() {
             a += 1
             this.values[p.row][p.col] = a
         } else {

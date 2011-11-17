@@ -2,9 +2,9 @@ package main
 
 import "testing"
 
-func TestIterate(t *testing.T) {
+func TestCalculate(t *testing.T) {
 /*
-    m := NewMap(
+    terrain := NewTerrain(
     ".......................................\n" +
     ".......................................\n" +
     ".......................................\n" +
@@ -19,24 +19,24 @@ func TestIterate(t *testing.T) {
 
     rows = 200
     cols = 200
-    m := new(Map)
-    m.SeeHill(Point{180, 50}, Player(1))
-    m.SeeWater(Point{179, 48})
-    m.SeeWater(Point{179, 49})
-    m.SeeWater(Point{179, 50})
-    m.SeeWater(Point{179, 51})
-    m.SeeWater(Point{179, 52})
+    terrain := new(Terrain)
+    terrain.SeeHill(Point{180, 50}, Player(1))
+    terrain.SeeWater(Point{179, 48})
+    terrain.SeeWater(Point{179, 49})
+    terrain.SeeWater(Point{179, 50})
+    terrain.SeeWater(Point{179, 51})
+    terrain.SeeWater(Point{179, 52})
     ForEachPoint(func(p Point) {
-        if !m.At(p).IsVisible() {
-            m.SeeLand(p)
+        if !terrain.At(p).IsVisible() {
+            terrain.SeeLand(p)
         }
     })
 
-    mystery := NewMystery(m)
-    scent := NewScent(m, mystery)
+    mystery := NewMystery(terrain)
+    scent := NewScent(terrain, mystery)
     start := now()
     for i := 0; i < 25; i++ {
-        scent.Iterate()
+        scent.Calculate()
     }
     runtime := now() - start
     if runtime > 150 {
