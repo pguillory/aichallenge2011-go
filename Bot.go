@@ -48,7 +48,7 @@ func (this *Bot) SeeHill(row, col, player int) {
 func (this *Bot) SeeDeadAnt(row, col, player int) {
 }
 
-func (this *Bot) Go() []Order {
+func (this *Bot) Go(issueOrder func(int, int, byte)) {
     timer := NewTimer()
 
     timer.Start("map")
@@ -74,10 +74,9 @@ func (this *Bot) Go() []Order {
     this.command.Calculate()
     timer.Stop()
 
-    timer.Start("bot")
-    orders := make([]Order, 1000)
+    timer.Start("issueOrder")
     this.command.ForEach(func(move Move) {
-        orders = append(orders, Order{move.from.row, move.from.col, move.dir.Char()})
+        issueOrder(move.from.row, move.from.col, move.dir.Char())
     })
     timer.Stop()
 
@@ -87,8 +86,6 @@ func (this *Bot) Go() []Order {
         NewTurnLog("map", "log").WriteString(this.terrain.String())
         NewTurnLog("army", "log").WriteString(this.army.String())
     }
-
-    return orders
 }
 
 func (this *Bot) ColorString() string {

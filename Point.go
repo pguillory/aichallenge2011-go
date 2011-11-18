@@ -8,8 +8,8 @@ type Point struct {
 }
 
 func (this Point) Normalize() Point {
-    this.row = normalize_row(this.row)
-    this.col = normalize_col(this.col)
+    this.row = normalizeRow(this.row)
+    this.col = normalizeCol(this.col)
     return this
 }
 

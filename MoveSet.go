@@ -1,16 +1,15 @@
 package main
 
-type Move struct {
-    from Point
-    dir Direction
-}
-
 type MoveSet struct {
     dirs [MAX_ROWS][MAX_COLS]Direction
 }
 
 func (this *MoveSet) At(p Point) Direction {
     return this.dirs[p.row][p.col]
+}
+
+func (this *MoveSet) Include(move Move) {
+    this.dirs[move.from.row][move.from.col] |= move.dir
 }
 
 func (this *MoveSet) IncludeAllFrom(p Point) {
@@ -60,11 +59,50 @@ func (this *MoveSet) ForEach(f func(Move)) {
     })
 }
 
+func (this *MoveSet) ForEachMoveTo(p Point, f func(Move)) {
+    this.ForEach(func(move Move) {
+        if move.Destination().Equals(p) {
+            f(move)
+        }
+    })
+}
+
+func (this *MoveSet) FocusOn(p Point) (result byte) {
+    moves := *this
+    //ForEachPointWithinRadius2(p, attackradius2, func(p2 Point) {
+    //    this.ForEachMoveTo(p2, func(move Move) {
+    //        moves.Include(move)
+    //    })
+    //})
+
+    var dirs [5]Direction
+
+    for _, move := range spiralPattern {
+        p2 := p.Plus(move.from)
+        dirs[0] = STAY
+        dirs[1] = move.dir
+        dirs[2] = move.dir.Right()
+        dirs[3] = move.dir.Backward()
+        dirs[4] = move.dir.Left()
+        for _, dir := range dirs {
+            p3 := p2.Neighbor(dir)
+            move2 := Move{p3, dir.Backward()}
+            if moves.Includes(move2) {
+                moves.Select(move2)
+                result += 1
+                break
+            }
+        }
+    }
+
+    return
+}
+
 func (this *MoveSet) Cardinality() int {
     return MAX_ROWS * MAX_COLS
 }
 
-func (this *MoveSet) Order(valueFunc func(move Move) float32) *OrderedMoveList {
+func (this *MoveSet) OrderedList(valueFunc func(move Move) float32) *OrderedMoveList {
     list := NewOrderedMoveList(this.Cardinality())
 
     this.ForEach(func(move Move) {
@@ -72,4 +110,14 @@ func (this *MoveSet) Order(valueFunc func(move Move) float32) *OrderedMoveList {
     })
 
     return list
+}
+
+func (this *MoveSet) Destinations() *PointSet {
+    result := new(PointSet)
+
+    this.ForEach(func(move Move) {
+        result.Include(move.Destination())
+    })
+
+    return result
 }

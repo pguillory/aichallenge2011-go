@@ -7,11 +7,6 @@ import "strings"
 import "strconv"
 import "fmt"
 
-type Order struct {
-    row, col int
-    dir byte
-}
-
 var debugMode = true
 
 func main() {
@@ -25,9 +20,9 @@ func main() {
         case 1:
             switch words[0] {
             case "go":
-                for _, order := range bot.Go() {
-                    fmt.Printf("o %v %v %c\n", order.row, order.col, order.dir)
-                }
+                bot.Go(func(row, col int, dir byte) {
+                    fmt.Printf("o %v %v %c\n", row, col, dir)
+                })
                 fmt.Println("go")
                 os.Stdout.Sync()
             	runtime.GC()

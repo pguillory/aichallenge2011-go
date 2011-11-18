@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=MyBot
+TARG=GoBot
 GOFILES=\
     globals.go\
 	Direction.go\
@@ -11,7 +11,10 @@ GOFILES=\
 	Mystery.go\
 	Scent.go\
 	Army.go\
+	Move.go\
+	PointSet.go\
 	MoveSet.go\
+	Focus.go\
 	OrderedMoveList.go\
 	Command.go\
 	Bot.go\

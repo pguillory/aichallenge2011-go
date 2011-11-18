@@ -1,5 +1,7 @@
 package main
 
+import "bytes"
+
 type Direction byte
 
 const (
@@ -72,6 +74,10 @@ func (this Direction) Includes(dir Direction) bool {
     return this & dir > 0
 }
 
+func (this Direction) Minus(dir Direction) Direction {
+    return this & ^dir
+}
+
 func (this Direction) Char() byte {
     switch this {
     case 0:
@@ -91,21 +97,15 @@ func (this Direction) Char() byte {
 }
 
 func (this Direction) String() string {
-    switch this {
-    case 0:
-        return "-"
-    case NORTH:
-        return "N"
-    case EAST:
-        return "E"
-    case SOUTH:
-        return "S"
-    case WEST:
-        return "W"
-    case STAY:
-        return "X"
-    }
-    return "+"
+    b := new(bytes.Buffer)
+
+    ForEachDirection(func(dir Direction) {
+        if this.Includes(dir) {
+            b.WriteByte(dir.Char())
+        }
+    })
+
+    return b.String()
 }
 
 func ForEachDirection(f func(Direction)) {

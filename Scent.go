@@ -27,8 +27,6 @@ func (this *Scent) Calculate() {
         switch {
         case s.HasWater():
             v = 0.0
-        case s.HasFriendlyAnt():
-            v = 0.0
         case s.HasFriendlyHill():
             v = 0.0
         default:
@@ -48,9 +46,7 @@ func (this *Scent) Calculate() {
                 if s.IsEnemy() {
                     v += 5.0
                 } else {
-                    //ForEachNeighbor(p, func(p2 Point) {
-                    //    
-                    //})
+                    v *= 0.1
                 }
             }
         }
@@ -88,9 +84,7 @@ func (this *Scent) CalculateSoldier() {
                 if s.IsEnemy() {
                     v += 5.0
                 } else {
-                    //ForEachNeighbor(p, func(p2 Point) {
-                    //    
-                    //})
+                    v *= 0.5
                 }
             }
         }

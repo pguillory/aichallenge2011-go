@@ -8,7 +8,14 @@ func TestTimer(t *testing.T) {
     timer.Start("test")
     time.Sleep(10 * 1000000)
     timer.Stop()
-    if timer.times[0] < 10 || timer.times[0] > 11 {
+    if timer.times["test"] < 10 || timer.times["test"] > 11 {
+        t.Error(timer)
+    }
+
+    timer.Start("test")
+    time.Sleep(10 * 1000000)
+    timer.Stop()
+    if timer.times["test"] < 20 || timer.times["test"] > 21 {
         t.Error(timer)
     }
 }

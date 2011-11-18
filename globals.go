@@ -15,14 +15,14 @@ var viewradius2 = 55
 var attackradius2 = 5
 var spawnradius2 = 1
 
-func normalize_row(row int) int {
+func normalizeRow(row int) int {
     for row < 0 {
         row += rows
     }
     return row % rows
 }
 
-func normalize_col(col int) int {
+func normalizeCol(col int) int {
     for col < 0 {
         col += cols
     }
