@@ -80,7 +80,7 @@ func (this Point) Neighbor(dir Direction) Point {
 }
 
 func (this Point) String() string {
-    return fmt.Sprintf("Point{%v, %v}", this.row, this.col)
+    return fmt.Sprintf("%v:%v", this.row, this.col)
 }
 
 func ForEachPoint(f func(Point)) {

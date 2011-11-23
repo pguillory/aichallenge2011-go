@@ -2,13 +2,14 @@ package main
 
 type Terrain struct {
     squares [MAX_ROWS][MAX_COLS]Square
+    waterNeighbors [MAX_ROWS][MAX_COLS]byte
 }
 
 func NewTerrain(input string) *Terrain {
     this := new(Terrain)
 
-    rows = 0
-    cols = 0
+    rows = 1
+    cols = 1
     p := Point{0, 0}
 
     for _, c := range input {
@@ -37,9 +38,15 @@ func NewTerrain(input string) *Terrain {
 
         if rows <= p.row {
             rows = p.row + 1
+            if rows >= MAX_ROWS {
+                panic("Too many rows")
+            }
         }
         if cols <= p.col {
             cols = p.col + 1
+            if cols >= MAX_COLS {
+                panic("Too many cols")
+            }
         }
         p.col += 1
     }
@@ -53,6 +60,9 @@ func (this *Terrain) At(p Point) Square {
 
 func (this *Terrain) SeeWater(p Point) {
     this.squares[p.row][p.col] = this.At(p).PlusVisible().PlusWater()
+    ForEachNeighbor(p, func(p2 Point) {
+        this.waterNeighbors[p2.row][p2.col] += 1
+    })
 }
 
 func (this *Terrain) SeeLand(p Point) {
@@ -96,7 +106,9 @@ func (this *Terrain) Update(terrain *Terrain) {
             s2 := terrain.At(p)
 
             if s2.HasWater() {
-                s = s.PlusWater()
+                //s = s.PlusWater()
+                this.SeeWater(p)
+                return
             } else if !s.HasWater() && !s.HasLand() {
                 s = s.PlusLand()
             }

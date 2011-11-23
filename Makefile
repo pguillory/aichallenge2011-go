@@ -8,6 +8,8 @@ GOFILES=\
 	Player.go\
 	Square.go\
 	Terrain.go\
+	Situation.go\
+	Prediction.go\
 	Mystery.go\
 	Scent.go\
 	Army.go\

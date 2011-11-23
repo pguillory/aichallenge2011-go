@@ -1,6 +1,6 @@
 package main
 
-import "fmt"
+//import "fmt"
 
 var spiralPattern = [21]Move{
     {Point{ 0,  0}, NORTH},
@@ -28,19 +28,21 @@ var spiralPattern = [21]Move{
 
 type Command struct {
     terrain *Terrain
-    workerScent, soldierScent *Scent
+    workerScent, battleScent *Scent
     army *Army
+    predictions *Predictions
     moves, enemyMoves *MoveSet
     //dirs [MAX_ROWS][MAX_COLS]Direction
     //len int
 }
 
-func NewCommand(terrain *Terrain, workerScent, soldierScent *Scent, army *Army) *Command {
+func NewCommand(terrain *Terrain, workerScent, battleScent *Scent, army *Army, predictions *Predictions) *Command {
     this := new(Command)
     this.terrain = terrain
     this.workerScent = workerScent
-    this.soldierScent = soldierScent
+    this.battleScent = battleScent
     this.army = army
+    this.predictions = predictions
     return this
 }
 
@@ -57,7 +59,9 @@ func (this *Command) Reset() {
         if s.HasFriendlyAnt() {
             this.moves.IncludeAllFrom(p)
         } else if s.HasEnemyAnt() {
-            this.enemyMoves.IncludeAllFrom(p)
+            dir := this.predictions.At(p)
+            this.enemyMoves.Include(Move{p, dir})
+            //this.enemyMoves.IncludeAllFrom(p)
         }
     })
 
@@ -70,76 +74,112 @@ func (this *Command) Reset() {
     })
 }
 
-func (this *Command) PruneOutfocusedMoves() {
-    log := NewTurnLog("PruneOutfocusedMoves", "log")
-    log.WriteString(fmt.Sprintf("turn %v\n", turn))
+/*
+func FriendlyDestinations() *PointSet {
+    result := new(PointSet)
 
-    timer := NewTimer()
+    this.moves.ForEach(func(move Move) {
+        result.Include(move.Destination())
+    })
 
-    timer.Start("enemyDestinations")
-    enemyDestinations := this.enemyMoves.Destinations()
-    timer.Stop()
-    //fmt.Println("enemyDestinations")
-    //fmt.Println(enemyDestinations)
-
-    timer.Start("friendlyDestinations")
+    return result
     friendlyDestinations := this.moves.Destinations()
-    timer.Stop()
-    //fmt.Println("friendlyDestinations")
-    //fmt.Println(friendlyDestinations)
+}
+*/
 
-    timer.Start("friendlyFocus")
+func (this *Command) PruneOutfocusedMoves() {
+    //log := NewTurnLog("PruneOutfocusedMoves", "log")
+
+    //timer := NewTimer()
+
+    berzerkers := this.army.Berzerkers()
+
+    //timer.Start("enemyDestinations")
+    enemyDestinations := this.enemyMoves.Destinations()
+    //enemyDestinations.ForEach(func(p Point) {
+    //    this.moves.ExcludeMovesTo(p)
+    //})
+    //timer.Stop()
+    //log.WriteString("enemyDestinations\n")
+    //log.WriteString(fmt.Sprintf("%v\n\n", enemyDestinations))
+
+    //timer.Start("friendlyDestinations")
+    friendlyDestinations := this.moves.ExceptFrom(berzerkers).Destinations()
+    //timer.Stop()
+    //log.WriteString("friendlyDestinations\n")
+    //log.WriteString(fmt.Sprintf("%v\n\n", friendlyDestinations))
+
+    //timer.Start("friendlyFocus")
     friendlyFocus := OpposingFocus(friendlyDestinations, this.enemyMoves)
-    timer.Stop()
-    //fmt.Println("friendlyFocus")
-    //fmt.Println(friendlyFocus)
+    //timer.Stop()
+    //log.WriteString("friendlyFocus\n")
+    //log.WriteString(fmt.Sprintf("%v\n\n", friendlyFocus))
 
-    for i := 0; i < 10; i++ {
-        log.WriteString(fmt.Sprintf("iteration %v\n", i))
+    for i := 0; i < 20; i++ {
+        //log.WriteString(fmt.Sprintf("iteration %v\n", i))
 
-        timer.Start("enemyFocus")
+        //timer.Start("enemyFocus")
         enemyFocus := OpposingFocus(enemyDestinations, this.moves)
-        timer.Stop()
-        //fmt.Println("enemyFocus")
-        //fmt.Println(enemyFocus)
+        //timer.Stop()
+        //log.WriteString("enemyFocus\n")
+        //log.WriteString(fmt.Sprintf("%v\n\n", enemyFocus))
 
-        timer.Start("maxFriendlyFocus")
+        //timer.Start("maxFriendlyFocus")
         maxFriendlyFocus := MaxFocus(enemyDestinations, enemyFocus)
-        timer.Stop()
-        //fmt.Println("maxFriendlyFocus")
-        //fmt.Println(maxFriendlyFocus)
+        //timer.Stop()
+        //log.WriteString("maxFriendlyFocus\n")
+        //log.WriteString(fmt.Sprintf("%v\n\n", maxFriendlyFocus))
 
         changed := false
 
-        timer.Start("excluding moves")
+        //timer.Start("excluding moves")
         friendlyDestinations.ForEach(func(p Point) {
             if friendlyFocus.At(p) >= maxFriendlyFocus.At(p) {
+                //log.WriteString(fmt.Sprintf("ExcludeMovesTo(%v)\n", p))
                 this.moves.ExcludeMovesTo(p)
                 changed = true
             }
         })
-        timer.Stop()
+        //timer.Stop()
 
         if changed {
-            timer.Start("friendlyDestinations (redux)")
-            friendlyDestinations = this.moves.Destinations()
-            timer.Stop()
-            //fmt.Println("friendlyFocus")
-            //fmt.Println(friendlyFocus)
+            //timer.Start("friendlyDestinations")
+            friendlyDestinations = this.moves.ExceptFrom(berzerkers).Destinations()
+            //timer.Stop()
+            //log.WriteString("friendlyDestinations\n")
+            //log.WriteString(fmt.Sprintf("%v\n\n", friendlyDestinations))
         } else {
             break
         }
     }
 
-    log.WriteString(fmt.Sprintf("timer %v\n", timer))
+    //log.WriteString(fmt.Sprintf("\ntimer %v\n", timer))
 }
 
+/*
+func (this *Command) DoomedAntsTakeHeart() {
+    ForEachPoint(func(p Point) {
+        if this.terrain.At(p).HasFriendlyAnt() && this.moves.At(p) == 0 {
+            ForEachDirection(func(dir Direction) {
+                move := Move{p, dir}
+                s := this.terrain.At(move.Destination())
+                if !s.HasWater() && !s.HasFood() {
+                    this.moves.Include(move)
+                }
+            })
+        }
+    })
+}
+*/
+
 func (this *Command) PickBestMovesByScent() {
+    //log := NewTurnLog("PickBestMovesByScent", "log")
+
     list := this.moves.OrderedList(func(move Move) float32 {
         p2 := move.from.Neighbor(move.dir)
 
         if this.army.IsSoldierAt(move.from) {
-            return this.soldierScent.At(p2) - this.soldierScent.At(move.from)
+            return this.battleScent.At(p2) - this.battleScent.At(move.from)
         }
 
         return this.workerScent.At(p2) - this.workerScent.At(move.from)
@@ -148,9 +188,15 @@ func (this *Command) PickBestMovesByScent() {
     list.ForBestWorst(func(move Move) bool {
         return this.moves.Includes(move)
     }, func(move Move) {
+        //log.WriteString(fmt.Sprintf("Select %v\n", move))
         this.moves.Select(move)
     }, func(move Move) {
-        this.moves.Exclude(move)
+        if this.moves.At(move.from).IsMultiple() {
+            //log.WriteString(fmt.Sprintf("Exclude %v\n", move))
+            this.moves.Exclude(move)
+        } else {
+            //log.WriteString(fmt.Sprintf("Exclude %v -- skipped, not multiple\n", move))
+        }
     })
 }
 
@@ -176,27 +222,36 @@ func (this *Command) SaveCrushedAntsAt(p Point) {
 //        p2 = neighbor(p, WEST);  exclude_move(p2, EAST);  save_crushed_ant(p2);
 
 func (this *Command) Calculate() {
-    log := NewTurnLog("command", "log")
+    //log := NewTurnLog("command", "log")
+    //log.WriteString(fmt.Sprintf("start\n"))
 
-    timer := NewTimer()
+    //timer := NewTimer()
 
-    timer.Start("Reset")
+    //timer.Start("Reset")
     this.Reset()
-    timer.Stop()
+    //timer.Stop()
+    //log.WriteString(fmt.Sprintf("Reset: %v ms\n", timer.times["Reset"]))
 
-    timer.Start("PruneOutfocusedMoves")
+    //timer.Start("PruneOutfocusedMoves")
     this.PruneOutfocusedMoves()
-    timer.Stop()
+    //timer.Stop()
+    //log.WriteString(fmt.Sprintf("PruneOutfocusedMoves: %v ms\n", timer.times["PruneOutfocusedMoves"]))
 
-    timer.Start("PickBestMovesByScent")
+    //timer.Start("DoomedAntsTakeHeart")
+    //this.DoomedAntsTakeHeart()
+    //timer.Stop()
+
+    //timer.Start("PickBestMovesByScent")
     this.PickBestMovesByScent()
-    timer.Stop()
+    //timer.Stop()
+    //log.WriteString(fmt.Sprintf("PickBestMovesByScent: %v ms\n", timer.times["PickBestMovesByScent"]))
 
-    timer.Start("SaveCrushedAnts")
+    //timer.Start("SaveCrushedAnts")
     this.SaveCrushedAnts()
-    timer.Stop()
+    //timer.Stop()
+    //log.WriteString(fmt.Sprintf("SaveCrushedAnts: %v ms\n", timer.times["SaveCrushedAnts"]))
 
-    log.WriteString(fmt.Sprintf("turn %v, timer %v\n", turn, timer))
+    //log.WriteString(fmt.Sprintf("turn %v, timer %v\n", turn, timer))
 }
 
 func (this *Command) ForEach(f func(Move)) {

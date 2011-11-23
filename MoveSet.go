@@ -20,6 +20,10 @@ func (this *MoveSet) Includes(move Move) bool {
     return this.dirs[move.from.row][move.from.col] & move.dir > 0
 }
 
+func (this *MoveSet) ExcludeAllFrom(p Point) {
+    this.dirs[p.row][p.col] = 0
+}
+
 func (this *MoveSet) Exclude(move Move) {
     if this.Includes(move) {
         this.dirs[move.from.row][move.from.col] &= ^move.dir
@@ -98,8 +102,27 @@ func (this *MoveSet) FocusOn(p Point) (result byte) {
     return
 }
 
+func (this *MoveSet) String() string {
+    return GridToString(func(p Point) byte {
+        dir := this.At(p)
+
+        switch {
+        case dir.IsSingle():
+            return dir.Char()
+        case dir.IsMultiple():
+            return '+'
+        }
+
+        return '.'
+    })
+}
+
 func (this *MoveSet) Cardinality() int {
-    return MAX_ROWS * MAX_COLS
+    count := 0
+    this.ForEach(func(move Move) {
+        count += 1
+    })
+    return count
 }
 
 func (this *MoveSet) OrderedList(valueFunc func(move Move) float32) *OrderedMoveList {
@@ -110,6 +133,15 @@ func (this *MoveSet) OrderedList(valueFunc func(move Move) float32) *OrderedMove
     })
 
     return list
+}
+
+func (this *MoveSet) ExceptFrom(exceptions *PointSet) *MoveSet {
+    result := new(MoveSet)
+    *result = *this
+    exceptions.ForEach(func(p Point) {
+        result.ExcludeAllFrom(p)
+    })
+    return result
 }
 
 func (this *MoveSet) Destinations() *PointSet {

@@ -6,12 +6,38 @@ func (this *PointSet) Include(p Point) {
     this[p.row][p.col] = true
 }
 
+func (this *PointSet) Includes(p Point) bool {
+    return this[p.row][p.col]
+}
+
+func (this *PointSet) Minus(exceptions *PointSet) *PointSet {
+    result := new(PointSet)
+    this.ForEach(func(p Point) {
+        if !exceptions.Includes(p) {
+            result.Include(p)
+        }
+    })
+    return result
+}
+
 func (this *PointSet) ForEach(f func(Point)) {
     ForEachPoint(func(p Point) {
         if this[p.row][p.col] {
             f(p)
         }
     })
+}
+
+func (this *PointSet) Cardinality() int {
+    result := 0
+
+    ForEachPoint(func(p Point) {
+        if this[p.row][p.col] {
+            result += 1
+        }
+    })
+
+    return result
 }
 
 func (this *PointSet) String() string {

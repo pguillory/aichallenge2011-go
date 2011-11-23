@@ -28,10 +28,15 @@ func (this *Army) IsSoldierAt(p Point) bool {
     return (this.CountAt(p) >= 3)
 }
 
+func (this *Army) IsBerzerkerAt(p Point) bool {
+    return (this.CountAt(p) >= 20)
+    //return (this.CountAt(p) >= 20 && this.terrain.EnemiesVisibleFrom(p) < this.terrain.AlliesVisibleFrom(p))
+}
+
 func (this *Army) Spread(p Point) {
     ForEachPointWithinManhattanDistance(p, 1, func(p2 Point) {
         v, v2 := this.At(p), this.At(p2)
-        if v < v2 && v > 0 {
+        if 0 < v && v < v2 {
             this.values[p2.row][p2.col] = v
             this.Spread(p2)
         }
@@ -61,20 +66,31 @@ func (this *Army) Calculate() {
     this.counts = counts
 }
 
+func (this *Army) Berzerkers() *PointSet{
+    points := new(PointSet)
+
+    ForEachPoint(func(p Point) {
+        if this.IsBerzerkerAt(p) {
+            points.Include(p)
+        }
+    })
+
+    return points
+}
+
 func (this *Army) String() string {
     return GridToString(func(p Point) byte {
         v := this.At(p)
         switch {
         case v == 0:
+            return '.'
         case v <= 26:
             if this.IsSoldierAt(p) {
                 return 'A' + byte(v) - 1
             } else {
                 return 'a' + byte(v) - 1
             }
-        default:
-            return '+'
         }
-        return '.'
+        return '+'
     })
 }

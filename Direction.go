@@ -11,6 +11,7 @@ const (
     WEST  = Direction(8)
     STAY  = Direction(16)
 
+    ALL_DIRECTIONS = NORTH | EAST | SOUTH | WEST | STAY
     DIRECTIONS = 5
 )
 
@@ -54,6 +55,19 @@ func (this Direction) Backward() Direction {
         return EAST
     }
     return this
+}
+
+func (this Direction) IsSingle() bool {
+    switch this {
+    case NORTH:
+    case EAST:
+    case SOUTH:
+    case WEST:
+    case STAY:
+    default:
+        return false
+    }
+    return true
 }
 
 func (this Direction) IsMultiple() bool {

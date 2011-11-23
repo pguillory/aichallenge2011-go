@@ -1,9 +1,18 @@
 package main
 
+import "fmt"
+
+type ScentChannel struct {
+    pathways [DIRECTIONS]*float32
+    multiplier float32
+    additive float32
+}
+
 type Scent struct {
     terrain *Terrain
     mystery *Mystery
     value [MAX_ROWS][MAX_COLS]float32
+    channels [MAX_ROWS][MAX_COLS]ScentChannel
 }
 
 func NewScent(terrain *Terrain, mystery *Mystery) *Scent {
@@ -17,82 +26,121 @@ func (this *Scent) At(p Point) float32 {
     return this.value[p.row][p.col]
 }
 
-func (this *Scent) Calculate() {
-    var newValue [MAX_ROWS][MAX_COLS]float32
-
+func (this *Scent) BuildChannels() {
     ForEachPoint(func(p Point) {
-        var v float32
+        channel := &this.channels[p.row][p.col]
+        channel.pathways[0] = &this.value[(p.row - 1 + rows) % rows][(p.col           )       ]
+        channel.pathways[1] = &this.value[(p.row           )       ][(p.col - 1 + cols) % cols]
+        channel.pathways[2] = &this.value[(p.row           )       ][(p.col           )       ]
+        channel.pathways[3] = &this.value[(p.row           )       ][(p.col + 1       ) % cols]
+        channel.pathways[4] = &this.value[(p.row + 1       ) % rows][(p.col           )       ]
+
+        channel.multiplier = 1.0 / (5.0 - float32(this.terrain.waterNeighbors[p.row][p.col]))
+        channel.additive = 0
+    })
+}
+
+func (this *Scent) EmanateForage() {
+    ForEachPoint(func(p Point) {
+        channel := &this.channels[p.row][p.col]
+
+        channel.multiplier *= 0.95
 
         s := this.terrain.At(p)
+
         switch {
-        case s.HasWater():
-            v = 0.0
-        case s.HasFriendlyHill():
-            v = 0.0
-        default:
-            v = (this.value[(p.row - 1 + rows) % rows][(p.col           )       ] +
-                 this.value[(p.row           )       ][(p.col - 1 + cols) % cols] +
-                 this.value[(p.row           )       ][(p.col           )       ] +
-                 this.value[(p.row           )       ][(p.col + 1       ) % cols] +
-                 this.value[(p.row + 1       ) % rows][(p.col           )       ]) / 5.0 * 0.95
-
-            v += this.mystery.At(p) * 10.0
-
-            if s.HasFood() {
-                v += 100.0
-            } else if s.HasEnemyHill() {
-                v += 500.0
-            } else if s.HasAnt() {
-                if s.IsEnemy() {
-                    v += 5.0
-                } else {
-                    v *= 0.1
-                }
+        case s.HasFood():
+            channel.additive = 50.0
+        case s.HasHill():
+            if s.IsEnemy() {
+                channel.additive = 500.0
+            } else {
+                channel.multiplier = 0.0
             }
+        case s.HasAnt():
+            if s.IsEnemy() {
+                // if 3 visible friendlies or near friendly hill
+                channel.additive = 5.0
+            } else {
+                channel.multiplier *= 0.1
+            }
+        case s.HasWater():
+            channel.multiplier = 0.0
+        default:
+            channel.additive = this.mystery.At(p) * 5.0
         }
-
-        newValue[p.row][p.col] = v
     })
+}
+
+func (this *Scent) EmanateBattle() {
+    ForEachPoint(func(p Point) {
+        channel := &this.channels[p.row][p.col]
+
+        channel.multiplier *= 0.99
+
+        s := this.terrain.At(p)
+
+        switch {
+        case s.HasHill():
+            if s.IsEnemy() {
+                channel.additive = 500.0
+            } else {
+                channel.multiplier = 0.0
+            }
+        case s.HasAnt():
+            if s.IsEnemy() {
+                // if 3 visible friendlies or near friendly hill
+                channel.additive = 5.0
+            } else {
+                channel.multiplier *= 0.9
+            }
+        case s.HasWater():
+            channel.multiplier = 0.0
+        default:
+            channel.additive = this.mystery.At(p) * 1.0
+        }
+    })
+}
+
+func (this *Scent) Spread() {
+    var newValue [MAX_ROWS][MAX_COLS]float32
+
+    var p Point
+    for p.row = 0; p.row < rows; p.row++ {
+        for p.col = 0; p.col < cols; p.col++ {
+            channel := &this.channels[p.row][p.col]
+
+            v := *channel.pathways[0]
+            v += *channel.pathways[1]
+            v += *channel.pathways[2]
+            v += *channel.pathways[3]
+            v += *channel.pathways[4]
+
+            newValue[p.row][p.col] = v * channel.multiplier + channel.additive * 10000000000000000000000000000.0
+        }
+    }
 
     this.value = newValue
 }
 
-func (this *Scent) CalculateSoldier() {
-    var newValue [MAX_ROWS][MAX_COLS]float32
+func (this *Scent) Calculate() {
+    this.BuildChannels()
 
-    ForEachPoint(func(p Point) {
-        var v float32
+    this.EmanateForage()
 
-        s := this.terrain.At(p)
-        switch {
-        case s.HasWater():
-            v = 0.0
-        case s.HasFriendlyHill():
-            v = 0.0
-        default:
-            v = (this.value[(p.row - 1 + rows) % rows][(p.col           )       ] +
-                 this.value[(p.row           )       ][(p.col - 1 + cols) % cols] +
-                 this.value[(p.row           )       ][(p.col           )       ] +
-                 this.value[(p.row           )       ][(p.col + 1       ) % cols] +
-                 this.value[(p.row + 1       ) % rows][(p.col           )       ]) / 5.0 * 0.95
+    for i := 0; i < 100; i++ {
+        this.Spread()
+    }
+}
 
-            v += this.mystery.At(p) * 10.0
+func (this *Scent) CalculateBattle() {
+    this.BuildChannels()
 
-            if s.HasEnemyHill() {
-                v += 500.0
-            } else if s.HasAnt() {
-                if s.IsEnemy() {
-                    v += 5.0
-                } else {
-                    v *= 0.5
-                }
-            }
-        }
+    this.EmanateBattle()
 
-        newValue[p.row][p.col] = v
-    })
-
-    this.value = newValue
+    for i := 0; i < 100; i++ {
+        this.Spread()
+    }
 }
 
 func (this *Scent) String() string {
@@ -123,8 +171,14 @@ func (this *Scent) String() string {
             }
             return '+'
         case square.HasWater():
-            return '%'
+            return '_'
         }
-        return '?'
+        return ' '
+    })
+}
+
+func (this *Scent) Csv() string {
+    return GridToCsv(func(p Point) string {
+        return fmt.Sprintf("%v", this.At(p))
     })
 }

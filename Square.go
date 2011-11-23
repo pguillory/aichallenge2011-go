@@ -1,13 +1,13 @@
 package main
 
 const (
-    _ = iota
-    SQUARE_VISIBLE = byte(1<<iota)
-    SQUARE_LAND
-    SQUARE_WATER
-    SQUARE_FOOD
-    SQUARE_ANT
-    SQUARE_HILL
+    SQUARE_VISIBLE  = byte(1)
+    SQUARE_LAND     = byte(2)
+    SQUARE_WATER    = byte(4)
+    SQUARE_FOOD     = byte(8)
+    SQUARE_ANT      = byte(16)
+    SQUARE_HILL     = byte(32)
+    SQUARE_ENEMY    = byte(64)
 )
 
 type Square struct {

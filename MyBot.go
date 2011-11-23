@@ -6,10 +6,22 @@ import "bufio"
 import "strings"
 import "strconv"
 import "fmt"
-
-var debugMode = true
+//import "os/signal"
+//import "runtime/debug"
 
 func main() {
+/*
+    go func() {
+        log := NewLog("signals", "txt")
+        for sig := range signal.Incoming {
+            log.WriteString(fmt.Sprintf("signal %v\n%#v\n\n", sig, sig))
+            debug.PrintStack()
+            //if s == os.SIGINT
+            os.Exit(1)
+        }
+    }()
+*/
+
 	var bot Bot
 
     stdin := bufio.NewReader(os.Stdin)
@@ -26,6 +38,7 @@ func main() {
                 fmt.Println("go")
                 os.Stdout.Sync()
             	runtime.GC()
+            	// TODO: yield
             case "ready":
                 bot.Ready()
                 fmt.Println("go")
