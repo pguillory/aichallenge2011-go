@@ -11,20 +11,20 @@ func TestFollowScentThroughMaze(t *testing.T) {
     "%...%...%\n" +
     "%%%%%%%%%")
     mystery := NewMystery(terrain)
-    workerScent := NewScent(terrain, mystery)
+    forageScent := NewScent(terrain, mystery)
     battleScent := NewScent(terrain, mystery)
     army := NewArmy(terrain)
-    command := NewCommand(terrain, workerScent, battleScent, army)
+    command := NewCommand(terrain, forageScent, battleScent, army)
     for i := 0; i < 20; i++ {
-        workerScent.Calculate()
+        forageScent.Calculate()
         battleScent.CalculateBattle()
     }
     command.Calculate()
     if command.At(Point{1, 1}) != SOUTH {
-        t.Error(workerScent)
+        t.Error(forageScent)
         t.Error(battleScent)
         t.Error(command)
-        t.Errorf("%v %v", workerScent.At(Point{1, 1}), workerScent.At(Point{2, 1}))
+        t.Errorf("%v %v", forageScent.At(Point{1, 1}), forageScent.At(Point{2, 1}))
     }
 }
 */
@@ -37,14 +37,15 @@ func TestMoves(t *testing.T) {
     "...................................................................%\n" +
     "...................................................................%\n" +
     "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    holyGround := NewHolyGround(terrain)
     mystery := NewMystery(terrain)
-    workerScent := NewScent(terrain, mystery)
-    battleScent := NewScent(terrain, mystery)
+    forageScent := NewForageScent(terrain, holyGround, mystery)
+    battleScent := NewBattleScent(terrain, holyGround, mystery)
     army := NewArmy(terrain)
     predictions := NewPredictions(terrain)
-    command := NewCommand(terrain, workerScent, battleScent, army, predictions)
-    workerScent.Calculate()
-    battleScent.CalculateBattle()
+    command := NewCommand(terrain, forageScent, battleScent, army, predictions)
+    forageScent.Calculate()
+    battleScent.Calculate()
     command.Reset()
     before := command.At(Point{2, 0})
     command.PruneOutfocusedMoves()

@@ -24,13 +24,14 @@ func TestScentCalculateRuntime(t *testing.T) {
         }
     })
 
+    holyGround := NewHolyGround(terrain)
     mystery := NewMystery(terrain)
-    scent := NewScent(terrain, mystery)
+    scent := NewForageScent(terrain, holyGround, mystery)
     start := now()
     scent.Calculate()
     runtime := now() - start
     if runtime > 100 {
-        t.Error(scent)
+        //t.Error(scent)
         t.Errorf("runtime=%v ms\n", runtime)
     }
 }
@@ -48,8 +49,9 @@ func TestCalculateScentDissipation(t *testing.T) {
     ".......................................\n" +
     ".......................................")
 
+    holyGround := NewHolyGround(terrain)
     mystery := NewMystery(terrain)
-    scent := NewScent(terrain, mystery)
+    scent := NewForageScent(terrain, holyGround, mystery)
 
     scent.Calculate()
 /*
@@ -83,8 +85,9 @@ func TestCalculate3(t *testing.T) {
     "%.....................................%\n" +
     "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
+    holyGround := NewHolyGround(terrain)
     mystery := NewMystery(terrain)
-    scent := NewScent(terrain, mystery)
+    scent := NewForageScent(terrain, holyGround, mystery)
 
     scent.Calculate()
 /*

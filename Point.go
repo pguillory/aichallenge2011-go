@@ -7,6 +7,24 @@ type Point struct {
     row, col int
 }
 
+/*
+func (this Point) AssertValid() {
+    if this.row < 0 {
+        fmt.Printf("row: %v or %#v\n", this.row, this.row)
+        panic("Row too low")
+    }
+    if this.row >= MAX_ROWS {
+        panic("Row too high")
+    }
+    if this.col < 0 {
+        panic("Col too low")
+    }
+    if this.col >= MAX_COLS {
+        panic("Col too high")
+    }
+}
+*/
+
 func (this Point) Normalize() Point {
     this.row = normalizeRow(this.row)
     this.col = normalizeCol(this.col)
@@ -14,8 +32,8 @@ func (this Point) Normalize() Point {
 }
 
 func (this Point) Plus(p Point) Point {
-    this.row = (this.row + p.row + rows) % rows
-    this.col = (this.col + p.col + cols) % cols
+    this.row = (this.row + p.row + rows * MAX_ROWS) % rows
+    this.col = (this.col + p.col + cols * MAX_COLS) % cols
     return this
 }
 

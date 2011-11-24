@@ -67,6 +67,15 @@ func (this Square) HasEnemyHill() bool {
     return this.IsEnemy() && this.HasHill()
 }
 
+func (this Square) HasAntBelongingTo(player Player) bool {
+    return this.HasAnt() && this.owner == player
+}
+
+func (this Square) HasHillBelongingTo(player Player) bool {
+    return this.HasHill() && this.owner == player
+}
+
+
 
 func (this Square) PlusVisible() Square {
     this.contents |= SQUARE_VISIBLE

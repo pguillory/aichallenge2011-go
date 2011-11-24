@@ -6,8 +6,9 @@ import "os"
 type Bot struct {
     terrain *Terrain
     update *Terrain
+    holyGround *HolyGround
     mystery *Mystery
-    workerScent, battleScent *Scent
+    forageScent, battleScent *Scent
     army *Army
     predictions *Predictions
     command *Command
@@ -18,12 +19,13 @@ func (this *Bot) Ready() {
     VerifySituationSize()
 
     this.terrain = new(Terrain)
+    this.holyGround = NewHolyGround(this.terrain)
     this.mystery = NewMystery(this.terrain)
-    this.workerScent = NewScent(this.terrain, this.mystery)
-    this.battleScent = NewScent(this.terrain, this.mystery)
+    this.forageScent = NewForageScent(this.terrain, this.holyGround, this.mystery)
+    this.battleScent = NewBattleScent(this.terrain, this.holyGround, this.mystery)
     this.army = NewArmy(this.terrain)
     this.predictions = NewPredictions(this.terrain)
-    this.command = NewCommand(this.terrain, this.workerScent, this.battleScent, this.army, this.predictions)
+    this.command = NewCommand(this.terrain, this.forageScent, this.battleScent, this.army, this.predictions)
 
     this.hud = NewLog("hud", "txt")
 }
@@ -60,18 +62,23 @@ func (this *Bot) Go(issueOrder func(int, int, byte)) {
     timer.Stop()
     timeLog.WriteString(fmt.Sprintf("map: %v\n", timer.times["map"]))
 
+    timer.Start("holyGround")
+    this.holyGround.Calculate()
+    timer.Stop()
+    timeLog.WriteString(fmt.Sprintf("holyGround: %v\n", timer.times["holyGround"]))
+
     timer.Start("mystery")
     this.mystery.Calculate()
     timer.Stop()
     timeLog.WriteString(fmt.Sprintf("mystery: %v\n", timer.times["mystery"]))
 
-    timer.Start("workerScent")
-    this.workerScent.Calculate()
+    timer.Start("forageScent")
+    this.forageScent.Calculate()
     timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("workerScent: %v\n", timer.times["workerScent"]))
+    timeLog.WriteString(fmt.Sprintf("forageScent: %v\n", timer.times["forageScent"]))
 
     timer.Start("battleScent")
-    this.battleScent.CalculateBattle()
+    this.battleScent.Calculate()
     timer.Stop()
     timeLog.WriteString(fmt.Sprintf("battleScent: %v\n", timer.times["battleScent"]))
 
@@ -102,8 +109,8 @@ func (this *Bot) Go(issueOrder func(int, int, byte)) {
     this.hud.WriteString(fmt.Sprintf("turn %v, times %v\n", turn, timer.String()))
     //NewTurnLog("map", "txt").WriteString(this.terrain.String())
     //NewTurnLog("mystery", "txt").WriteString(this.mystery.String())
-    //NewTurnLog("workerScent", "txt").WriteString(this.workerScent.String())
-    //NewTurnLog("workerScent", "csv").WriteString(this.workerScent.Csv())
+    //NewTurnLog("forageScent", "txt").WriteString(this.forageScent.String())
+    //NewTurnLog("forageScent", "csv").WriteString(this.forageScent.Csv())
     //NewTurnLog("battleScent", "txt").WriteString(this.battleScent.String())
     //NewTurnLog("battleScent", "csv").WriteString(this.battleScent.Csv())
     //NewTurnLog("army", "txt").WriteString(this.army.String())

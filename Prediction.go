@@ -80,7 +80,7 @@ func (this *ObservationLinkedList) Matching(situation *Situation) (result *Obser
 
 
 
-const OBSERVATIONSLAB_SIZE = 2048
+const OBSERVATIONSLAB_SIZE = 4096
 //const OBSERVATIONSLAB_BITSIZE = (OBSERVATIONSLAB_SIZE + 31) / 32
 
 type ObservationSlab struct {
@@ -155,15 +155,16 @@ func (this *Predictions) Calculate() {
     ForEachEnemyPlayer(func(player Player) {
         //log.WriteString(fmt.Sprintf("player %v\n", player))
 
+        found := false
+
         moves := new(MoveSet)
         ForEachPoint(func(p Point) {
-            oldSquare := this.oldTerrain.At(p)
-            if oldSquare.HasEnemyAnt() && oldSquare.owner == player {
+            if this.oldTerrain.At(p).HasAntBelongingTo(player) {
                 ForEachDirection(func(dir Direction) {
                     if !(dir.Includes(EAST | SOUTH) && this.terrain.At(p).HasAnt()) {
                         p2 := p.Neighbor(dir)
-                        newSquare := this.terrain.At(p2)
-                        if newSquare.HasEnemyAnt() && newSquare.owner == player {
+                        if this.terrain.At(p2).HasAntBelongingTo(player) {
+                            found = true
                             moves.Include(Move{p, dir})
                         }
                     }
@@ -171,7 +172,7 @@ func (this *Predictions) Calculate() {
             }
         })
 
-        if moves.Cardinality() > 0 {
+        if found {
             //log.WriteString(fmt.Sprintf("before elimination, %v moves\n", moves.Cardinality()))
 
             //moves.EliminateLoops()

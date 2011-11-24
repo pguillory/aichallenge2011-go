@@ -1,5 +1,33 @@
 package main
 
+var spiralPattern = [...]Move{
+    //{Point{ 0,  0}, NORTH},
+
+    {Point{-1,  0}, NORTH},
+    {Point{ 0,  1}, EAST},
+    {Point{ 1,  0}, SOUTH},
+    {Point{ 0, -1}, WEST},
+
+    {Point{-2,  0}, NORTH},
+    {Point{ 0,  2}, EAST},
+    {Point{ 2,  0}, SOUTH},
+    {Point{ 0, -2}, WEST},
+
+    {Point{-1,  1}, NORTH},
+    {Point{ 1,  1}, EAST},
+    {Point{ 1, -1}, SOUTH},
+    {Point{-1, -1}, WEST},
+
+    {Point{-2,  1}, NORTH},
+    {Point{-1,  2}, NORTH},
+    {Point{ 1,  2}, EAST},
+    {Point{ 2,  1}, EAST},
+    {Point{ 2, -1}, SOUTH},
+    {Point{ 1, -2}, SOUTH},
+    {Point{-1, -2}, WEST},
+    {Point{-2, -1}, WEST},
+}
+
 type MoveSet struct {
     dirs [MAX_ROWS][MAX_COLS]Direction
 }
@@ -52,11 +80,11 @@ func (this *MoveSet) ExcludeMovesTo(p Point) {
 
 func (this *MoveSet) ForEach(f func(Move)) {
     ForEachPoint(func(p Point) {
-        if this.At(p) > 0 {
+        dirs := this.At(p)
+        if dirs > 0 {
             ForEachDirection(func(dir Direction) {
-                move := Move{p, dir}
-                if this.Includes(move) {
-                    f(move)
+                if dirs & dir > 0 {
+                    f(Move{p, dir})
                 }
             })
         }
@@ -73,28 +101,27 @@ func (this *MoveSet) ForEachMoveTo(p Point, f func(Move)) {
 
 func (this *MoveSet) FocusOn(p Point) (result byte) {
     moves := *this
-    //ForEachPointWithinRadius2(p, attackradius2, func(p2 Point) {
-    //    this.ForEachMoveTo(p2, func(move Move) {
-    //        moves.Include(move)
-    //    })
-    //})
 
-    var dirs [5]Direction
+    var dirs [3]Direction
 
     for _, move := range spiralPattern {
         p2 := p.Plus(move.from)
+
         dirs[0] = STAY
         dirs[1] = move.dir
         dirs[2] = move.dir.Right()
-        dirs[3] = move.dir.Backward()
-        dirs[4] = move.dir.Left()
+        //dirs[3] = move.dir.Left()
+        //dirs[4] = move.dir.Backward()
+
         for _, dir := range dirs {
             p3 := p2.Neighbor(dir)
-            move2 := Move{p3, dir.Backward()}
-            if moves.Includes(move2) {
-                moves.Select(move2)
-                result += 1
-                break
+            if moves.dirs[p3.row][p3.col] > 0 {
+                move2 := Move{p3, dir.Backward()}
+                if moves.Includes(move2) {
+                    moves.Select(move2)
+                    result += 1
+                    break
+                }
             }
         }
     }

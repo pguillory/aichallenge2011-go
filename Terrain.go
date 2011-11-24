@@ -3,6 +3,8 @@ package main
 type Terrain struct {
     squares [MAX_ROWS][MAX_COLS]Square
     waterNeighbors [MAX_ROWS][MAX_COLS]byte
+    visibleFriendlies [MAX_ROWS][MAX_COLS]byte
+    visibleEnemies [MAX_ROWS][MAX_COLS]byte
 }
 
 func NewTerrain(input string) *Terrain {
@@ -58,6 +60,14 @@ func (this *Terrain) At(p Point) Square {
     return this.squares[p.row][p.col]
 }
 
+func (this *Terrain) VisibleFriendliesAt(p Point) byte {
+    return this.visibleFriendlies[p.row][p.col]
+}
+
+func (this *Terrain) VisibleEnemiesAt(p Point) byte {
+    return this.visibleEnemies[p.row][p.col]
+}
+
 func (this *Terrain) SeeWater(p Point) {
     this.squares[p.row][p.col] = this.At(p).PlusVisible().PlusWater()
     ForEachNeighbor(p, func(p2 Point) {
@@ -89,13 +99,23 @@ func (this *Terrain) Update(terrain *Terrain) {
             s = s.PlusAnt(s2.owner)
         }
         this.squares[p.row][p.col] = s
+        this.visibleEnemies[p.row][p.col] = 0
+        this.visibleFriendlies[p.row][p.col] = 0
     })
 
     ForEachPoint(func(p Point) {
-        if this.At(p).HasFriendlyAnt() {
-            ForEachPointWithinRadius2(p, viewradius2, func(p2 Point) {
-                this.squares[p2.row][p2.col] = this.At(p2).PlusVisible()
-            })
+        s := this.At(p)
+        if s.HasAnt() {
+            if s.IsFriendly() {
+                ForEachPointWithinRadius2(p, viewradius2, func(p2 Point) {
+                    this.squares[p2.row][p2.col] = this.At(p2).PlusVisible()
+                    this.visibleFriendlies[p2.row][p2.col] += 1
+                })
+            } else {
+                ForEachPointWithinRadius2(p, viewradius2, func(p2 Point) {
+                    this.visibleEnemies[p2.row][p2.col] += 1
+                })
+            }
         }
     })
 
