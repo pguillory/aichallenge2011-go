@@ -1,14 +1,19 @@
 package main
 
 type Terrain struct {
+    time int64
+    turn int
     squares [MAX_ROWS][MAX_COLS]Square
-    waterNeighbors [MAX_ROWS][MAX_COLS]byte
+    //waterNeighbors [MAX_ROWS][MAX_COLS]byte
     visibleFriendlies [MAX_ROWS][MAX_COLS]byte
     visibleEnemies [MAX_ROWS][MAX_COLS]byte
 }
 
 func NewTerrain(input string) *Terrain {
     this := new(Terrain)
+
+    turn = 1
+    this.turn = turn
 
     rows = 1
     cols = 1
@@ -70,9 +75,9 @@ func (this *Terrain) VisibleEnemiesAt(p Point) byte {
 
 func (this *Terrain) SeeWater(p Point) {
     this.squares[p.row][p.col] = this.At(p).PlusVisible().PlusWater()
-    ForEachNeighbor(p, func(p2 Point) {
-        this.waterNeighbors[p2.row][p2.col] += 1
-    })
+    //ForEachNeighbor(p, func(p2 Point) {
+    //    this.waterNeighbors[p2.row][p2.col] += 1
+    //})
 }
 
 func (this *Terrain) SeeLand(p Point) {
@@ -92,6 +97,8 @@ func (this *Terrain) SeeHill(p Point, owner Player) {
 }
 
 func (this *Terrain) Update(terrain *Terrain) {
+    startTime := now()
+
     ForEachPoint(func(p Point) {
         s := this.At(p).MinusVisible().MinusAnt()
         s2 := terrain.At(p)
@@ -148,6 +155,9 @@ func (this *Terrain) Update(terrain *Terrain) {
             this.squares[p.row][p.col] = s
         }
     })
+
+    this.time = now() - startTime
+    this.turn = turn
 }
 
 func (this *Terrain) String() string {

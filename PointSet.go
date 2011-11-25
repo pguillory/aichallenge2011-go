@@ -2,7 +2,6 @@ package main
 
 //import "fmt"
 
-/*
 type PointSet [MAX_ROWS][MAX_COLS]bool
 
 func (this *PointSet) Include(p Point) {
@@ -81,8 +80,8 @@ func (this *PointSet) String() string {
         return '.'
     })
 }
-*/
 
+/*
 const POINTSET_BITSIZE = MAX_ROWS * MAX_COLS
 const POINTSET_INTSIZE = (POINTSET_BITSIZE + 31) / 32
 
@@ -167,3 +166,4 @@ func (this *PointSet) String() string {
         return '.'
     })
 }
+*/

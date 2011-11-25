@@ -1,6 +1,10 @@
 package main
 
+const STARTING_MYSTERY = 0.25
+
 type Mystery struct {
+    time int64
+    turn int
     terrain *Terrain
     value [MAX_ROWS][MAX_COLS]float32
 }
@@ -10,9 +14,11 @@ func NewMystery(terrain *Terrain) *Mystery {
     this.terrain = terrain
     ForEachPoint(func(p Point) {
         if !terrain.At(p).IsVisible() {
-            this.value[p.row][p.col] = 0.25
+            this.value[p.row][p.col] = STARTING_MYSTERY
         }
     })
+
+    this.Calculate()
     return this
 }
 
@@ -21,6 +27,11 @@ func (this *Mystery) At(p Point) float32 {
 }
 
 func (this *Mystery) Calculate() {
+    if this.turn == turn {
+        return
+    }
+    startTime := now()
+
     ForEachPoint(func(p Point) {
         square := this.terrain.At(p)
         if square.IsVisible() || square.HasWater() {
@@ -32,6 +43,9 @@ func (this *Mystery) Calculate() {
             }
         }
     })
+
+    this.time = now() - startTime
+    this.turn = turn
 }
 
 func (this *Mystery) String() string {

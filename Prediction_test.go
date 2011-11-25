@@ -32,13 +32,18 @@ func TestPredictions(t *testing.T) {
 
     terrain := new(Terrain)
     predictions := NewPredictions(terrain)
+    //t.Errorf("terrain.turn: %v, predictions.turn: %v\n", terrain.turn, predictions.turn)
 
     result := ""
-    for turn := 1; turn <= 5; turn++ {
+    for turn = 1; turn <= 10; turn++ {
         terrain.Update(terrain1)
         predictions.Calculate()
+        //t.Errorf("terrain.turn: %v, predictions.turn: %v\n", terrain.turn, predictions.turn)
+
+        turn++
         terrain.Update(terrain2)
         predictions.Calculate()
+        //t.Errorf("terrain.turn: %v, predictions.turn: %v\n", terrain.turn, predictions.turn)
 
         result += predictions.At(p).String() + ", "
     }

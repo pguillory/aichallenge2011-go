@@ -34,10 +34,11 @@ func main() {
             case "go":
                 bot.Go(func(row, col int, dir byte) {
                     fmt.Printf("o %v %v %c\n", row, col, dir)
+                }, func() {
+                    fmt.Println("go")
+                    os.Stdout.Sync()
+                	runtime.GC()
                 })
-                fmt.Println("go")
-                os.Stdout.Sync()
-            	runtime.GC()
             	// TODO: yield
             case "ready":
                 bot.Ready()

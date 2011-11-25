@@ -6,7 +6,7 @@ import "os"
 type Bot struct {
     terrain *Terrain
     update *Terrain
-    holyGround *HolyGround
+    distanceToEnemy, distanceToFriendlyHill *TravelDistance
     mystery *Mystery
     forageScent, battleScent *Scent
     army *Army
@@ -19,10 +19,11 @@ func (this *Bot) Ready() {
     VerifySituationSize()
 
     this.terrain = new(Terrain)
-    this.holyGround = NewHolyGround(this.terrain)
+    this.distanceToEnemy = DistanceToEnemy(this.terrain)
+    this.distanceToFriendlyHill = DistanceToFriendlyHill(this.terrain)
     this.mystery = NewMystery(this.terrain)
-    this.forageScent = NewForageScent(this.terrain, this.holyGround, this.mystery)
-    this.battleScent = NewBattleScent(this.terrain, this.holyGround, this.mystery)
+    this.forageScent = NewForageScent(this.terrain, this.distanceToEnemy, this.distanceToFriendlyHill, this.mystery)
+    this.battleScent = NewBattleScent(this.terrain, this.distanceToEnemy, this.distanceToFriendlyHill, this.mystery)
     this.army = NewArmy(this.terrain)
     this.predictions = NewPredictions(this.terrain)
     this.command = NewCommand(this.terrain, this.forageScent, this.battleScent, this.army, this.predictions)
@@ -53,66 +54,25 @@ func (this *Bot) SeeHill(row, col, player int) {
 func (this *Bot) SeeDeadAnt(row, col, player int) {
 }
 
-func (this *Bot) Go(issueOrder func(int, int, byte)) {
-    timer := NewTimer()
-    timeLog := NewTurnLog("times", "txt")
-
-    timer.Start("map")
+func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     this.terrain.Update(this.update)
-    timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("map: %v\n", timer.times["map"]))
 
-    timer.Start("holyGround")
-    this.holyGround.Calculate()
-    timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("holyGround: %v\n", timer.times["holyGround"]))
-
-    timer.Start("mystery")
-    this.mystery.Calculate()
-    timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("mystery: %v\n", timer.times["mystery"]))
-
-    timer.Start("forageScent")
-    this.forageScent.Calculate()
-    timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("forageScent: %v\n", timer.times["forageScent"]))
-
-    timer.Start("battleScent")
-    this.battleScent.Calculate()
-    timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("battleScent: %v\n", timer.times["battleScent"]))
-
-    timer.Start("army")
-    this.army.Calculate()
-    timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("army: %v\n", timer.times["army"]))
-
-    timer.Start("predictions")
-    this.predictions.Calculate()
-    timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("predictions: %v\n", timer.times["predictions"]))
-
-    timer.Start("command")
     this.command.Calculate()
-    timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("command: %v\n", timer.times["command"]))
 
-    timer.Start("issueOrder")
     this.command.ForEach(func(move Move) {
         issueOrder(move.from.row, move.from.col, move.dir.Char())
     })
-    timer.Stop()
-    timeLog.WriteString(fmt.Sprintf("issueOrder: %v\n", timer.times["issueOrder"]))
+    done()
 
     // TODO: do this in a goroutine
     this.hud.WriteString(fmt.Sprintf("%v\n", this.ColorString()))
-    this.hud.WriteString(fmt.Sprintf("turn %v, times %v\n", turn, timer.String()))
+    this.hud.WriteString(fmt.Sprintf("turn %v, times: map %v, dH %v, dE %v, myst %v, for %v, bat %v, army %v, pred %v, comm %v\n", turn, this.terrain.time, this.distanceToFriendlyHill.time, this.distanceToEnemy.time, this.mystery.time, this.forageScent.time, this.battleScent.time, this.army.time, this.predictions.time, this.command.time))
     //NewTurnLog("map", "txt").WriteString(this.terrain.String())
     //NewTurnLog("mystery", "txt").WriteString(this.mystery.String())
     //NewTurnLog("forageScent", "txt").WriteString(this.forageScent.String())
-    //NewTurnLog("forageScent", "csv").WriteString(this.forageScent.Csv())
+    NewTurnLog("forageScent", "csv").WriteString(this.forageScent.Csv())
     //NewTurnLog("battleScent", "txt").WriteString(this.battleScent.String())
-    //NewTurnLog("battleScent", "csv").WriteString(this.battleScent.Csv())
+    NewTurnLog("battleScent", "csv").WriteString(this.battleScent.Csv())
     //NewTurnLog("army", "txt").WriteString(this.army.String())
 }
 

@@ -10,10 +10,11 @@ GOFILES=\
 	Player.go\
 	Square.go\
 	Terrain.go\
-	HolyGround.go\
+	TravelDistance.go\
 	Situation.go\
 	Prediction.go\
 	Mystery.go\
+	AdjacentWater.go\
 	Scent.go\
 	Army.go\
 	Move.go\

@@ -5,6 +5,8 @@ package main
 const HOLYGROUND_MAX = 255
 
 type HolyGround struct {
+    time int64
+    turn int
     terrain *Terrain
     value [MAX_ROWS][MAX_COLS]byte
     friendlyHills int
@@ -13,6 +15,8 @@ type HolyGround struct {
 func NewHolyGround(terrain *Terrain) *HolyGround {
     this := new(HolyGround)
     this.terrain = terrain
+
+    this.Calculate()
     return this
 }
 
@@ -21,6 +25,11 @@ func (this *HolyGround) At(p Point) byte {
 }
 
 func (this *HolyGround) Calculate() {
+    if this.turn == turn {
+        return
+    }
+    startTime := now()
+
     queue := new(PointQueue)
 
     ForEachPoint(func(p Point) {
@@ -43,6 +52,9 @@ func (this *HolyGround) Calculate() {
             })
         }
     })
+
+    this.time = now() - startTime
+    this.turn = turn
 }
 
 func (this *HolyGround) String() string {

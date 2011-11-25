@@ -138,6 +138,8 @@ func (this *ObservationSlab) Matching(situation *Situation) (result *Observation
 
 
 type Predictions struct {
+    time int64
+    turn int
     terrain *Terrain
     oldTerrain Terrain
     observations [MAX_PLAYERS]ObservationSlab
@@ -146,10 +148,17 @@ type Predictions struct {
 func NewPredictions(terrain *Terrain) *Predictions {
     this := new(Predictions)
     this.terrain = terrain
+
+    this.Calculate()
     return this
 }
 
 func (this *Predictions) Calculate() {
+    if this.turn == turn {
+        return
+    }
+    startTime := now()
+
     //log := NewTurnLog("predictions", "txt")
 
     ForEachEnemyPlayer(func(player Player) {
@@ -214,6 +223,9 @@ func (this *Predictions) Calculate() {
     this.oldTerrain = *this.terrain
 
     //log.WriteString(fmt.Sprintf("done\n"))
+
+    this.time = now() - startTime
+    this.turn = turn
 }
 
 func (this *Predictions) At(p Point) Direction {

@@ -1,9 +1,11 @@
 #!/usr/bin/env sh
+set -e
 turns=$1
 shift
 
 cd `dirname $0`
-# make
+gomake
+
 cd ../tools
 # --player_seed 42 
 # --map_file maps/test.map \

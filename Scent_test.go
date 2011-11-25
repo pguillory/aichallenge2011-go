@@ -2,6 +2,7 @@ package main
 
 import "testing"
 
+/*
 func TestScentCalculateRuntime(t *testing.T) {
     rows = 200
     cols = 160
@@ -24,9 +25,10 @@ func TestScentCalculateRuntime(t *testing.T) {
         }
     })
 
-    holyGround := NewHolyGround(terrain)
+    distanceToEnemy := DistanceToEnemy(terrain)
+    distanceToFriendlyHill := DistanceToFriendlyHill(terrain)
     mystery := NewMystery(terrain)
-    scent := NewForageScent(terrain, holyGround, mystery)
+    scent := NewForageScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
     start := now()
     scent.Calculate()
     runtime := now() - start
@@ -35,36 +37,47 @@ func TestScentCalculateRuntime(t *testing.T) {
         t.Errorf("runtime=%v ms\n", runtime)
     }
 }
+*/
 
 func TestCalculateScentDissipation(t *testing.T) {
     terrain := NewTerrain(
-    ".......................................\n" +
-    ".......................................\n" +
-    ".......................................\n" +
-    ".......................................\n" +
-    "................%%%%%..................\n" +
-    "..................1....................\n" +
-    ".......................................\n" +
-    ".......................................\n" +
-    ".......................................\n" +
-    ".......................................")
+    "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+    "%....................................................................................................................................................................%\n" +
+    "%.%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%.%\n" +
+    "%.%............................................................a...................................................................................................%.%\n" +
+    "%.%1...............................................................................................................................................................%.%\n" +
+    "%.%................................................................................................................................................................%.%\n" +
+    "%.%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%...%.%\n" +
+    "%.%................................................................................................................................................................%.%\n" +
+    "%.%................................................................................................................................................................%.%\n" +
+    "%.%................................................................................................................................................................%.%\n" +
+    "%.%...%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%.%\n" +
+    "%.%................................................................................................................................................................%.%\n" +
+    "%.%................................................................................................................................................................%.%\n" +
+    "%.%................................................................................................................................................................%.%\n" +
+    "%.%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%.%\n" +
+    "%....................................................................................................................................................................%\n" +
+    "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-    holyGround := NewHolyGround(terrain)
+    distanceToEnemy := DistanceToEnemy(terrain)
+    distanceToFriendlyHill := DistanceToFriendlyHill(terrain)
     mystery := NewMystery(terrain)
-    scent := NewForageScent(terrain, holyGround, mystery)
+    scent := NewBattleScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
 
-    scent.Calculate()
-/*
-    t.Error(scent)
-    scent.Calculate()
-    t.Error(scent)
-    scent.Calculate()
-    t.Error(scent)
-    scent.Calculate()
-    t.Error(scent)
-*/
+    //t.Error(scent.adjacentWater)
+    //t.Error(scent)
+
+
+    for turn = 1; turn <= 8; turn++ {
+        if turn == 4 {
+            terrain.squares[4][3].contents &= ^SQUARE_HILL
+        }
+        scent.Calculate()
+        t.Errorf("turn %v\n%v\n%v\n\n\n", turn, scent, scent.At(Point{4, 3}))
+    }
 }
 
+/*
 func TestCalculate3(t *testing.T) {
     terrain := NewTerrain(
     "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
@@ -85,34 +98,35 @@ func TestCalculate3(t *testing.T) {
     "%.....................................%\n" +
     "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
 
-    holyGround := NewHolyGround(terrain)
+    distanceToEnemy := DistanceToEnemy(terrain)
+    distanceToFriendlyHill := DistanceToFriendlyHill(terrain)
     mystery := NewMystery(terrain)
-    scent := NewForageScent(terrain, holyGround, mystery)
+    scent := NewForageScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
 
     scent.Calculate()
-/*
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
-    scent.Calculate()
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
-    scent.Calculate()
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
-    scent.Calculate()
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
-    scent.Calculate()
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
 
-    terrain.squares[1][1] = terrain.squares[1][1].MinusHill()
-    t.Errorf("*disappear*")
-
-    scent.Calculate()
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
-    scent.Calculate()
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
-    scent.Calculate()
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
-    scent.Calculate()
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
-    scent.Calculate()
-    t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
-*/
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
+    //scent.Calculate()
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
+    //scent.Calculate()
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
+    //scent.Calculate()
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
+    //scent.Calculate()
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
+    //
+    //terrain.squares[1][1] = terrain.squares[1][1].MinusHill()
+    //t.Errorf("*disappear*")
+    //
+    //scent.Calculate()
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
+    //scent.Calculate()
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
+    //scent.Calculate()
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
+    //scent.Calculate()
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
+    //scent.Calculate()
+    //t.Errorf("%v %v %v %v %v", scent.At(Point{1, 1}), scent.At(Point{5, 1}), scent.At(Point{9, 1}), scent.At(Point{13, 1}), scent.At(Point{17, 1}))
 }
+*/

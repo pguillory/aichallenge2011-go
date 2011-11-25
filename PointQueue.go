@@ -2,7 +2,7 @@ package main
 
 //import "fmt"
 
-const POINTQUEUE_CAPACITY = 64 * 1024
+const POINTQUEUE_CAPACITY = MAX_ROWS * MAX_COLS
 
 type PointQueue struct {
     points [POINTQUEUE_CAPACITY]Point

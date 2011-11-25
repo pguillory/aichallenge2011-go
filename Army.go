@@ -1,6 +1,8 @@
 package main
 
 type Army struct {
+    time int64
+    turn int
     terrain *Terrain
     values [MAX_ROWS][MAX_COLS]uint16
     counts [MAX_ROWS * MAX_COLS / 2]uint16
@@ -9,6 +11,8 @@ type Army struct {
 func NewArmy(terrain *Terrain) *Army {
     this := new(Army)
     this.terrain = terrain
+
+    this.Calculate()
     return this
 }
 
@@ -44,12 +48,17 @@ func (this *Army) Spread(p Point) {
 }
 
 func (this *Army) Calculate() {
-    var a uint16
+    if this.turn == turn {
+        return
+    }
+    startTime := now()
+
+    var cohort uint16
 
     ForEachPoint(func(p Point) {
         if this.terrain.At(p).HasFriendlyAnt() {
-            a += 1
-            this.values[p.row][p.col] = a
+            cohort += 1
+            this.values[p.row][p.col] = cohort
         } else {
             this.values[p.row][p.col] = 0
         }
@@ -64,6 +73,9 @@ func (this *Army) Calculate() {
         counts[this.At(p)] += 1
     })
     this.counts = counts
+
+    this.time = now() - startTime
+    this.turn = turn
 }
 
 func (this *Army) Berzerkers() *PointSet{

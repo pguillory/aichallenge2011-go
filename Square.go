@@ -19,6 +19,10 @@ func (this Square) IsVisible() bool {
     return this.contents & SQUARE_VISIBLE > 0
 }
 
+func (this Square) EverSeen() bool {
+    return this.contents & (SQUARE_LAND | SQUARE_WATER) > 0
+}
+
 func (this Square) HasLand() bool {
     return this.contents & SQUARE_LAND > 0
 }
