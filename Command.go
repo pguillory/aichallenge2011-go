@@ -1,12 +1,12 @@
 package main
 
-import "fmt"
+//import "fmt"
 
 type Command struct {
     time int64
     turn int
     terrain *Terrain
-    forageScent, battleScent *Scent
+    forageScent *Scent
     army *Army
     predictions *Predictions
     moves, enemyMoves *MoveSet
@@ -16,11 +16,11 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, forageScent, battleScent *Scent, army *Army, predictions *Predictions) *Command {
+func NewCommand(terrain *Terrain, forageScent *Scent, army *Army, predictions *Predictions) *Command {
     this := new(Command)
     this.terrain = terrain
     this.forageScent = forageScent
-    this.battleScent = battleScent
+    //this.battleScent = battleScent
     this.army = army
     this.predictions = predictions
 
@@ -57,15 +57,15 @@ func (this *Command) Reset() {
 }
 
 func (this *Command) PruneOutfocusedMoves() {
-    log := NewTurnLog("PruneOutfocusedMoves", "txt")
+    //log := NewTurnLog("PruneOutfocusedMoves", "txt")
 
     timer := NewTimer()
 
     timer.Start("berzerkers")
     berzerkers := this.army.Berzerkers()
     timer.Stop()
-    log.WriteString(fmt.Sprintf("berzerkers: %v ms\n", timer.times["berzerkers"]))
-    log.WriteString(fmt.Sprintf("%v\n\n", berzerkers))
+    //log.WriteString(fmt.Sprintf("berzerkers: %v ms\n", timer.times["berzerkers"]))
+    //log.WriteString(fmt.Sprintf("%v\n\n", berzerkers))
 
     timer.Start("enemyDestinations")
     this.enemyDestinations = this.enemyMoves.Destinations()
@@ -73,48 +73,48 @@ func (this *Command) PruneOutfocusedMoves() {
        this.moves.ExcludeMovesTo(p)
     })
     timer.Stop()
-    log.WriteString(fmt.Sprintf("enemyDestinations: %v ms\n", timer.times["enemyDestinations"]))
-    log.WriteString(fmt.Sprintf("%v\n\n", this.enemyDestinations))
+    //log.WriteString(fmt.Sprintf("enemyDestinations: %v ms\n", timer.times["enemyDestinations"]))
+    //log.WriteString(fmt.Sprintf("%v\n\n", this.enemyDestinations))
 
     timer.Start("enemyVisibility")
     enemyVisibility := this.enemyDestinations.Visibility()
     timer.Stop()
-    log.WriteString(fmt.Sprintf("enemyVisibility: %v ms\n", timer.times["enemyVisibility"]))
-    log.WriteString(fmt.Sprintf("%v\n\n", enemyVisibility))
+    //log.WriteString(fmt.Sprintf("enemyVisibility: %v ms\n", timer.times["enemyVisibility"]))
+    //log.WriteString(fmt.Sprintf("%v\n\n", enemyVisibility))
 
     timer.Start("friendlyDestinations")
     friendlyDestinations := this.moves.ExceptFrom(berzerkers).Destinations().Intersection(enemyVisibility)
     timer.Stop()
-    log.WriteString(fmt.Sprintf("friendlyDestinations: %v ms\n", timer.times["friendlyDestinations"]))
-    log.WriteString(fmt.Sprintf("%v\n\n", friendlyDestinations))
+    //log.WriteString(fmt.Sprintf("friendlyDestinations: %v ms\n", timer.times["friendlyDestinations"]))
+    //log.WriteString(fmt.Sprintf("%v\n\n", friendlyDestinations))
 
     timer.Start("friendlyFocus")
     this.friendlyFocus = OpposingFocus(friendlyDestinations, this.enemyMoves)
     timer.Stop()
-    log.WriteString(fmt.Sprintf("friendlyFocus: %v ms\n", timer.times["friendlyFocus"]))
-    log.WriteString(fmt.Sprintf("%v\n\n", this.friendlyFocus))
+    //log.WriteString(fmt.Sprintf("friendlyFocus: %v ms\n", timer.times["friendlyFocus"]))
+    //log.WriteString(fmt.Sprintf("%v\n\n", this.friendlyFocus))
 
     for i := 0; i < 10; i++ {
-        log.WriteString(fmt.Sprintf("\n\n*** iteration %v ***\n\n", i))
+        //log.WriteString(fmt.Sprintf("\n\n*** iteration %v ***\n\n", i))
 
         timer.Start("enemyFocus")
         enemyFocus := OpposingFocus(this.enemyDestinations, this.moves)
         timer.Stop()
-        log.WriteString(fmt.Sprintf("enemyFocus: %v ms\n", timer.times["enemyFocus"]))
-        log.WriteString(fmt.Sprintf("%v\n\n", enemyFocus))
+        //log.WriteString(fmt.Sprintf("enemyFocus: %v ms\n", timer.times["enemyFocus"]))
+        //log.WriteString(fmt.Sprintf("%v\n\n", enemyFocus))
 
         timer.Start("maxFriendlyFocus")
         this.maxFriendlyFocus = MaxFocus(this.enemyDestinations, enemyFocus)
         timer.Stop()
-        log.WriteString(fmt.Sprintf("maxFriendlyFocus: %v ms\n", timer.times["maxFriendlyFocus"]))
-        log.WriteString(fmt.Sprintf("%v\n\n", this.maxFriendlyFocus))
+        //log.WriteString(fmt.Sprintf("maxFriendlyFocus: %v ms\n", timer.times["maxFriendlyFocus"]))
+        //log.WriteString(fmt.Sprintf("%v\n\n", this.maxFriendlyFocus))
 
         changed := false
 
         timer.Start("excluding moves")
         friendlyDestinations.ForEach(func(p Point) {
             if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
-                log.WriteString(fmt.Sprintf("ExcludeMovesTo(%v)\n", p))
+                //log.WriteString(fmt.Sprintf("ExcludeMovesTo(%v)\n", p))
                 this.moves.ExcludeMovesTo(p)
                 changed = true
             }
@@ -132,15 +132,15 @@ func (this *Command) PruneOutfocusedMoves() {
         }
     }
 
-    log.WriteString(fmt.Sprintf("\ntimer %v\n", timer))
+    //log.WriteString(fmt.Sprintf("\ntimer %v\n", timer))
 }
 
 func (this *Command) DoomedAntsTakeHeart() {
-    log := NewTurnLog("DoomedAntsTakeHeart", "txt")
+    //log := NewTurnLog("DoomedAntsTakeHeart", "txt")
 
     ForEachPoint(func(p Point) {
         if this.terrain.At(p).HasFriendlyAnt() && this.moves.At(p) == 0 {
-            log.WriteString(fmt.Sprintf("Restoring %v\n", p))
+            //log.WriteString(fmt.Sprintf("Restoring %v\n", p))
 
             ForEachDirection(func(dir Direction) {
                 move := Move{p, dir}
@@ -160,38 +160,41 @@ func (this *Command) ValueAt(p Point) float32 {
     return this.forageScent.At(p) + float32(this.friendlyFocus.At(p)) * 1e30
 }
 
+/*
 func (this *Command) ArmyValueAt(p Point) float32 {
     if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
         return this.battleScent.At(p) - float32(this.friendlyFocus.At(p)) * 1e30
     }
     return this.battleScent.At(p) + float32(this.friendlyFocus.At(p)) * 1e30
 }
+*/
 
 func (this *Command) PickBestMovesByScent() {
-    log := NewTurnLog("PickBestMovesByScent", "txt")
+    //log := NewTurnLog("PickBestMovesByScent", "txt")
 
     list := this.moves.OrderedList(func(move Move) float32 {
+        //if this.forageScent.At(move.from.Neighbor(NORTH)) < 1e-40 && 
+        //    this.forageScent.At(move.from.Neighbor(EAST)) < 1e-40 &&
+        //    this.forageScent.At(move.from.Neighbor(SOUTH)) < 1e-40 &&
+        //    this.forageScent.At(move.from.Neighbor(WEST)) < 1e-40 {
+
         //if this.army.IsSoldierAt(move.from) {
-        if this.forageScent.At(move.from.Neighbor(NORTH)) < 1e-40 && 
-            this.forageScent.At(move.from.Neighbor(EAST)) < 1e-40 &&
-            this.forageScent.At(move.from.Neighbor(SOUTH)) < 1e-40 &&
-            this.forageScent.At(move.from.Neighbor(WEST)) < 1e-40 {
-            return this.ArmyValueAt(move.Destination()) - this.ArmyValueAt(move.from)
-        }
+        //    return this.ArmyValueAt(move.Destination()) - this.ArmyValueAt(move.from)
+        //}
         return this.ValueAt(move.Destination()) - this.ValueAt(move.from)
     })
 
     list.ForBestWorst(func(move Move) bool {
         return this.moves.Includes(move)
     }, func(move Move) {
-        log.WriteString(fmt.Sprintf("Select %v\n", move))
+        //log.WriteString(fmt.Sprintf("Select %v\n", move))
         this.moves.Select(move)
     }, func(move Move) {
         if this.moves.At(move.from).IsMultiple() {
-            log.WriteString(fmt.Sprintf("Exclude %v\n", move))
+            //log.WriteString(fmt.Sprintf("Exclude %v\n", move))
             this.moves.Exclude(move)
         } else {
-            log.WriteString(fmt.Sprintf("Exclude %v -- skipped, not multiple\n", move))
+            //log.WriteString(fmt.Sprintf("Exclude %v -- skipped, not multiple\n", move))
         }
     })
 }
@@ -219,7 +222,7 @@ func (this *Command) SaveCrushedAntsAt(p Point) {
 
 func (this *Command) Calculate() {
     this.forageScent.Calculate()
-    this.battleScent.Calculate()
+    //this.battleScent.Calculate()
     this.army.Calculate()
     this.predictions.Calculate()
 
@@ -228,8 +231,8 @@ func (this *Command) Calculate() {
     }
     startTime := now()
 
-    log := NewTurnLog("command", "txt")
-    log.WriteString(fmt.Sprintf("start\n"))
+    //log := NewTurnLog("command", "txt")
+    //log.WriteString(fmt.Sprintf("start\n"))
 
     timer := NewTimer()
 

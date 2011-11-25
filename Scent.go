@@ -2,10 +2,15 @@ package main
 
 import "fmt"
 
+var zero float32
+
 type ScentChannel struct {
-    pathways [DIRECTIONS]*float32
+    tickValue float32
+    northTickValue, eastTickValue, southTickValue, westTickValue *float32
+    tockValue float32
+    northTockValue, eastTockValue, southTockValue, westTockValue *float32
     multiplier float32
-    //additive float32
+    additive float32
 }
 
 type Scent struct {
@@ -14,9 +19,9 @@ type Scent struct {
     terrain *Terrain
     distanceToEnemy, distanceToFriendlyHill *TravelDistance
     mystery *Mystery
-    configureChannel func(*Scent, Point, *ScentChannel) float32
+    configureChannel func(*Scent, Point, *ScentChannel)
     adjacentWater *AdjacentWater
-    value [MAX_ROWS][MAX_COLS]float32
+    //value [MAX_ROWS][MAX_COLS]float32
     channels [MAX_ROWS][MAX_COLS]ScentChannel
 }
 
@@ -24,11 +29,13 @@ func NewForageScent(terrain *Terrain, distanceToEnemy *TravelDistance, distanceT
     return NewScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery, ConfigureForageScentChannel)
 }
 
+/*
 func NewBattleScent(terrain *Terrain, distanceToEnemy *TravelDistance, distanceToFriendlyHill *TravelDistance, mystery *Mystery) *Scent {
     return NewScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery, ConfigureBattleScentChannel)
 }
+*/
 
-func NewScent(terrain *Terrain, distanceToEnemy *TravelDistance, distanceToFriendlyHill *TravelDistance, mystery *Mystery, configureChannel func(*Scent, Point, *ScentChannel) float32) *Scent {
+func NewScent(terrain *Terrain, distanceToEnemy *TravelDistance, distanceToFriendlyHill *TravelDistance, mystery *Mystery, configureChannel func(*Scent, Point, *ScentChannel)) *Scent {
     this := new(Scent)
     this.terrain = terrain
     this.distanceToEnemy = distanceToEnemy
@@ -41,12 +48,16 @@ func NewScent(terrain *Terrain, distanceToEnemy *TravelDistance, distanceToFrien
     return this
 }
 
-func (this *Scent) Emanate(p Point, value float32) {
-    this.value[p.row][p.col] += value
-}
+//func (this *Scent) Emanate(p Point, value float32) {
+//    this.value[p.row][p.col] += value
+//}
+//
+//func (this *Scent) Absorb(p Point) {
+//    this.value[p.row][p.col] = 0
+//}
 
-func (this *Scent) Absorb(p Point) {
-    this.value[p.row][p.col] = 0
+func (this *Scent) ChannelAt(p Point) *ScentChannel {
+    return &this.channels[p.row][p.col]
 }
 
 func (this *Scent) Calculate() {
@@ -60,21 +71,28 @@ func (this *Scent) Calculate() {
     startTime := now()
 
     ForEachPoint(func(p Point) {
-        channel := &this.channels[p.row][p.col]
-        channel.pathways[0] = &this.value[(p.row - 1 + rows) % rows][(p.col           )       ]
-        channel.pathways[1] = &this.value[(p.row           )       ][(p.col - 1 + cols) % cols]
-        channel.pathways[2] = &this.value[(p.row           )       ][(p.col           )       ]
-        channel.pathways[3] = &this.value[(p.row           )       ][(p.col + 1       ) % cols]
-        channel.pathways[4] = &this.value[(p.row + 1       ) % rows][(p.col           )       ]
+        channel := this.ChannelAt(p)
+
+        channel.northTickValue = &this.ChannelAt(p.Neighbor(NORTH)).tickValue
+        channel.eastTickValue  = &this.ChannelAt(p.Neighbor(EAST)).tickValue
+        channel.southTickValue = &this.ChannelAt(p.Neighbor(SOUTH)).tickValue
+        channel.westTickValue  = &this.ChannelAt(p.Neighbor(WEST)).tickValue
+
+        channel.northTockValue = &this.ChannelAt(p.Neighbor(NORTH)).tockValue
+        channel.eastTockValue  = &this.ChannelAt(p.Neighbor(EAST)).tockValue
+        channel.southTockValue = &this.ChannelAt(p.Neighbor(SOUTH)).tockValue
+        channel.westTockValue  = &this.ChannelAt(p.Neighbor(WEST)).tockValue
 
         channel.multiplier = 1.0 / (5.0 - float32(this.adjacentWater.At(p)))
-        //channel.additive = 0
-
-        this.value[p.row][p.col] *= 0.1
-        this.value[p.row][p.col] += this.configureChannel(this, p, channel)
+        channel.additive = 0.0
+        channel.tickValue = 0
     })
 
-    for i := 0; i < 100; i++ {
+    ForEachPoint(func(p Point) {
+        this.configureChannel(this, p, this.ChannelAt(p))
+    })
+
+    for i := 0; i < 1; i++ {
         this.Spread()
     }
 
@@ -82,47 +100,53 @@ func (this *Scent) Calculate() {
     this.turn = turn
 }
 
-func ConfigureForageScentChannel(this *Scent, p Point, channel *ScentChannel) float32 {
+func (this *Scent) PreventPropagationFrom(p Point) {
+    this.ChannelAt(p.Neighbor(NORTH)).southTickValue = &zero
+}
+
+func ConfigureForageScentChannel(this *Scent, p Point, channel *ScentChannel) {
+    //channel.tickValue = 1e30
+    channel.multiplier *= 0.9
+
     s := this.terrain.At(p)
 
     switch {
     case s.HasFood():
-        return 1e15
-        //channel.additive = 0.1
+        channel.additive += 1e15
     case s.HasHill():
         if s.IsEnemy() {
-            return 1e20
-            //this.value[p.row][p.col] += 1e20
-            //channel.additive = 1.0
+            channel.additive += 1e20
         } else {
-            channel.multiplier = 0.0
+            channel.multiplier *= 0.0
         }
     case s.HasAnt():
         if s.IsEnemy() {
-            switch {
-            case this.distanceToFriendlyHill.At(p) < 20:
-                //channel.additive = 1.0 * float32(20 - this.distanceToFriendlyHill.At(p)) / 20.0
-                //this.value[p.row][p.col] += 1.0 * float32(20 - this.distanceToFriendlyHill.At(p)) / 20.0
-                return 1e20 * float32(20 - this.distanceToFriendlyHill.At(p)) / 20.0
-            case this.terrain.VisibleFriendliesAt(p) >= 2:
-                //channel.additive = 0.01
-                //this.value[p.row][p.col] += 0.01
-                return 1e12
+            if this.distanceToFriendlyHill.At(p) < 20 {
+                channel.additive += 1e20 * float32(20 - this.distanceToFriendlyHill.At(p)) / 20.0
+            } else if this.terrain.VisibleFriendliesAt(p) >= 2 {
+                channel.additive += 1e14
             }
         } else {
-            channel.multiplier = 0.0
+            if this.terrain.VisibleEnemiesAt(p) > 0 {
+                channel.multiplier *= 1e-3
+            } else {
+                channel.multiplier *= 0.0
+            }
         }
     case s.HasWater():
-        channel.multiplier = 0.0
+        channel.multiplier *= 0.0
     default:
         //channel.additive = this.mystery.At(p) * 0.002
         //this.value[p.row][p.col] += this.mystery.At(p) * 0.002
-        return this.mystery.At(p) * 1e10
-    }
+        channel.additive += this.mystery.At(p) * 1e12
 
-    return 0.0
+        //if MAX_TRAVEL_DISTANCE > this.distanceToEnemy.At(p) {
+        //    channel.additive += 1e12 * (float32(MAX_TRAVEL_DISTANCE - this.distanceToEnemy.At(p)) / float32(MAX_TRAVEL_DISTANCE))
+        //}
+    }
 }
 
+/*
 func ConfigureBattleScentChannel(this *Scent, p Point, channel *ScentChannel) float32 {
     //this.value[p.row][p.col] *= 1e-1
 
@@ -164,31 +188,43 @@ func ConfigureBattleScentChannel(this *Scent, p Point, channel *ScentChannel) fl
 
     return 0.0
 }
+*/
 
 func (this *Scent) Spread() {
-    var newValue [MAX_ROWS][MAX_COLS]float32
-
     var p Point
+
     for p.row = 0; p.row < rows; p.row++ {
         for p.col = 0; p.col < cols; p.col++ {
             channel := &this.channels[p.row][p.col]
 
-            v := *channel.pathways[0] +
-                *channel.pathways[1] +
-                *channel.pathways[2] +
-                *channel.pathways[3] +
-                *channel.pathways[4]
-
-            newValue[p.row][p.col] = v * channel.multiplier //+ channel.additive //* 1e20
+            channel.tockValue = channel.tickValue
+            channel.tockValue += *channel.northTickValue
+            channel.tockValue += *channel.eastTickValue
+            channel.tockValue += *channel.southTickValue
+            channel.tockValue += *channel.westTickValue
+            channel.tockValue *= channel.multiplier
+            channel.tockValue += channel.additive
         }
     }
 
-    this.value = newValue
+    for p.row = 0; p.row < rows; p.row++ {
+        for p.col = 0; p.col < cols; p.col++ {
+            channel := &this.channels[p.row][p.col]
+
+            channel.tickValue = channel.tockValue
+            channel.tickValue += *channel.northTockValue
+            channel.tickValue += *channel.eastTockValue
+            channel.tickValue += *channel.southTockValue
+            channel.tickValue += *channel.westTockValue
+            channel.tickValue *= channel.multiplier
+            //channel.tickValue += channel.additive
+        }
+    }
 }
 
 func (this *Scent) At(p Point) float32 {
     //return this.value[p.row][p.col] + float32(MAX_TRAVEL_DISTANCE - this.distanceToEnemy.At(p)) * 1e-30
-    return this.value[p.row][p.col]
+    return this.channels[p.row][p.col].tickValue
 }
 
 func (this *Scent) String() string {
@@ -216,6 +252,11 @@ func (this *Scent) String() string {
             case this.At(p) <= 1e26: return 'd'
             case this.At(p) <= 1e28: return 'e'
             case this.At(p) <= 1e30: return 'f'
+            case this.At(p) <= 1e32: return 'g'
+            case this.At(p) <= 1e34: return 'h'
+            case this.At(p) <= 1e36: return 'i'
+            case this.At(p) <= 1e36: return 'j'
+            case this.At(p) <= 1e38: return 'k'
             }
             return '+'
         case square.HasWater():

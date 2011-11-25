@@ -7,14 +7,15 @@ const MAX_TRAVEL_DISTANCE = MAX_ROWS * MAX_COLS
 type TravelDistance struct {
     time int64
     turn int
-    terrain *Terrain
     value [MAX_ROWS][MAX_COLS]int
-    isDestination func(p Point) bool
+    isDestination, isPassable func(p Point) bool
 }
 
 func DistanceToFriendlyHill(terrain *Terrain) *TravelDistance {
     return NewTravelDistance(terrain, func(p Point) bool {
         return terrain.At(p).HasFriendlyHill()
+    }, func(p Point) bool {
+        return terrain.At(p).HasLand()
     })
 }
 
@@ -22,13 +23,16 @@ func DistanceToEnemy(terrain *Terrain) *TravelDistance {
     return NewTravelDistance(terrain, func(p Point) bool {
         square := terrain.At(p)
         return square.HasEnemyAnt() || square.HasEnemyHill() || !square.EverSeen()
+    }, func(p Point) bool {
+        square := terrain.At(p)
+        return square.HasLand() && !square.HasFriendlyAnt()
     })
 }
 
-func NewTravelDistance(terrain *Terrain, isDestination func(p Point) bool) *TravelDistance {
+func NewTravelDistance(isDestination func(p Point) bool, isPassable func(p Point) bool) *TravelDistance {
     this := new(TravelDistance)
-    this.terrain = terrain
     this.isDestination = isDestination
+    this.isPassable = isPassable
 
     this.Calculate()
     return this
@@ -54,7 +58,7 @@ func (this *TravelDistance) Calculate() {
     queue.ForEach(func(p Point) {
         v := this.value[p.row][p.col]
         ForEachNeighbor(p, func(p2 Point) {
-            if this.value[p2.row][p2.col] > v + 1 && this.terrain.At(p2).HasLand() {
+            if this.value[p2.row][p2.col] > v + 1 && this.isPassable(p2) {
                 this.value[p2.row][p2.col] = v + 1
                 queue.Push(p2)
             }

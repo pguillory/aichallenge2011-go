@@ -14,14 +14,14 @@ func TestFollowScentThroughMaze(t *testing.T) {
     distanceToFriendlyHill := DistanceToFriendlyHill(terrain)
     mystery := NewMystery(terrain)
     forageScent := NewForageScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
-    battleScent := NewBattleScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
+    //battleScent := NewBattleScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
     army := NewArmy(terrain)
     predictions := NewPredictions(terrain)
-    command := NewCommand(terrain, forageScent, battleScent, army, predictions)
+    command := NewCommand(terrain, forageScent, army, predictions)
 
     if command.At(Point{1, 1}) != SOUTH {
         t.Error(forageScent)
-        t.Error(battleScent)
+        //t.Error(battleScent)
         t.Error(command)
         t.Errorf("%v %v", forageScent.At(Point{1, 1}), forageScent.At(Point{2, 1}))
     }
@@ -39,10 +39,10 @@ func TestMoves(t *testing.T) {
     distanceToFriendlyHill := DistanceToFriendlyHill(terrain)
     mystery := NewMystery(terrain)
     forageScent := NewForageScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
-    battleScent := NewBattleScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
+    //battleScent := NewBattleScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
     army := NewArmy(terrain)
     predictions := NewPredictions(terrain)
-    command := NewCommand(terrain, forageScent, battleScent, army, predictions)
+    command := NewCommand(terrain, forageScent, army, predictions)
 
     command.Reset()
     before := command.At(Point{2, 0})

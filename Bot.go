@@ -8,7 +8,7 @@ type Bot struct {
     update *Terrain
     distanceToEnemy, distanceToFriendlyHill *TravelDistance
     mystery *Mystery
-    forageScent, battleScent *Scent
+    forageScent *Scent
     army *Army
     predictions *Predictions
     command *Command
@@ -23,10 +23,10 @@ func (this *Bot) Ready() {
     this.distanceToFriendlyHill = DistanceToFriendlyHill(this.terrain)
     this.mystery = NewMystery(this.terrain)
     this.forageScent = NewForageScent(this.terrain, this.distanceToEnemy, this.distanceToFriendlyHill, this.mystery)
-    this.battleScent = NewBattleScent(this.terrain, this.distanceToEnemy, this.distanceToFriendlyHill, this.mystery)
+    //this.battleScent = NewBattleScent(this.terrain, this.distanceToEnemy, this.distanceToFriendlyHill, this.mystery)
     this.army = NewArmy(this.terrain)
     this.predictions = NewPredictions(this.terrain)
-    this.command = NewCommand(this.terrain, this.forageScent, this.battleScent, this.army, this.predictions)
+    this.command = NewCommand(this.terrain, this.forageScent, this.army, this.predictions)
 
     this.hud = NewLog("hud", "txt")
 }
@@ -66,13 +66,13 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
 
     // TODO: do this in a goroutine
     this.hud.WriteString(fmt.Sprintf("%v\n", this.ColorString()))
-    this.hud.WriteString(fmt.Sprintf("turn %v, times: map %v, dH %v, dE %v, myst %v, for %v, bat %v, army %v, pred %v, comm %v\n", turn, this.terrain.time, this.distanceToFriendlyHill.time, this.distanceToEnemy.time, this.mystery.time, this.forageScent.time, this.battleScent.time, this.army.time, this.predictions.time, this.command.time))
+    this.hud.WriteString(fmt.Sprintf("turn %v, times: map %v, dH %v, dE %v, myst %v, for %v, army %v, pred %v, comm %v\n", turn, this.terrain.time, this.distanceToFriendlyHill.time, this.distanceToEnemy.time, this.mystery.time, this.forageScent.time, this.army.time, this.predictions.time, this.command.time))
     //NewTurnLog("map", "txt").WriteString(this.terrain.String())
     //NewTurnLog("mystery", "txt").WriteString(this.mystery.String())
-    //NewTurnLog("forageScent", "txt").WriteString(this.forageScent.String())
+    NewTurnLog("forageScent", "txt").WriteString(this.forageScent.String())
     NewTurnLog("forageScent", "csv").WriteString(this.forageScent.Csv())
     //NewTurnLog("battleScent", "txt").WriteString(this.battleScent.String())
-    NewTurnLog("battleScent", "csv").WriteString(this.battleScent.Csv())
+    //NewTurnLog("battleScent", "csv").WriteString(this.battleScent.Csv())
     //NewTurnLog("army", "txt").WriteString(this.army.String())
 }
 

@@ -78,9 +78,16 @@ func GridToColorString(f func(p Point) ColorChar) string {
     b := new(bytes.Buffer)
     var last ColorChar
 
-    ForEachPointAndLine(func(p Point) {
-        if p.row < rows - 50 || p.col > 170 {
+    max_row := 0
+
+    ForEachPoint(func(p Point) {
+        if p.row > 50 || p.col > 170 {
             return
+        }
+
+        if max_row < p.row {
+            max_row = p.row
+            b.WriteByte('\n')
         }
 
         cc := f(p)
@@ -99,8 +106,6 @@ func GridToColorString(f func(p Point) ColorChar) string {
         }
         last = cc
         b.WriteByte(cc.c)
-    }, func() {
-        b.WriteByte('\n')
     })
 
     b.WriteString(fmt.Sprintf("%c[0m", 27))
