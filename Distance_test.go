@@ -10,23 +10,12 @@ func TestTravelDistance(t *testing.T) {
     "%...%...%\n" +
     "%%%%%%%%%")
 
-    expected :=
-	"+++++++++\n" +
-	"+t+nml+f+\n" +
-	"+s+o+k+g+\n" +
-	"+rqp+jih+\n" +
-	"+++++++++"
-	//"+++++++++\n" +
-	//"+e+876+0+\n" +
-	//"+d+9+5+1+\n" +
-	//"+cba+432+\n" +
-	//"+++++++++"
-
     mystery := NewMystery(terrain)
     potentialEnemy := NewPotentialEnemy(terrain)
-    distanceToTrouble := DistanceToTrouble(terrain, mystery, potentialEnemy)
+    scrum := NewScrum()
+    distanceToTrouble := DistanceToTrouble(terrain, mystery, potentialEnemy, scrum)
 
-    if distanceToTrouble.String() != expected {
+    if distanceToTrouble.At(Point{1, 1}) <= distanceToTrouble.At(Point{2, 1}) {
         t.Error(terrain)
         t.Error(distanceToTrouble)
     }

@@ -12,6 +12,7 @@ GOFILES=\
 	Terrain.go\
 	Mystery.go\
 	PotentialEnemy.go\
+	Scrum.go\
 	Distance.go\
 	Situation.go\
 	Prediction.go\

@@ -33,7 +33,7 @@ func (this *Army) IsSoldierAt(p Point) bool {
 }
 
 func (this *Army) IsBerzerkerAt(p Point) bool {
-    return (this.CountAt(p) >= 12)
+    return (this.CountAt(p) >= 15)
     //return (this.CountAt(p) >= 20 && this.terrain.EnemiesVisibleFrom(p) < this.terrain.AlliesVisibleFrom(p))
 }
 

@@ -11,11 +11,8 @@ type PointQueue struct {
 
 func (this *PointQueue) Push(p Point) {
     this.points[this.end] = p
-    if this.end < POINTQUEUE_CAPACITY {
-        this.end += 1
-    } else {
-        this.end = 0
-    }
+    this.end += 1
+    this.end %= POINTQUEUE_CAPACITY
     if this.end == this.start {
         panic("PointQueue ran out of capacity")
     }

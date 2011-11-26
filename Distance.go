@@ -4,7 +4,7 @@ package main
 
 type Distance uint16
 
-const MAX_TRAVEL_DISTANCE = Distance(MAX_ROWS * MAX_COLS)
+const MAX_TRAVEL_DISTANCE = MAX_ROWS * MAX_COLS
 
 type TravelDistance struct {
     time int64
@@ -46,27 +46,50 @@ func DistanceToFood(terrain *Terrain) *TravelDistance {
     return distance
 }
 
-func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *PotentialEnemy) *TravelDistance {
-    mystery.Calculate()
-    potentialEnemy.Calculate()
-
-    distance := NewTravelDistance(func(p Point) (result Distance) {
-        square := terrain.At(p)
+func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *PotentialEnemy, scrum *Scrum) *TravelDistance {
+    distance := NewTravelDistance(func(p Point) Distance {
         switch {
-        case square.HasEnemyHill():
+        case terrain.At(p).HasEnemyHill():
             return 0
-        case mystery.At(p) >= 100:
+        case mystery.At(p) >= 50:
             return 10
         case potentialEnemy.At(p):
             return 15
-        case mystery.At(p) >= 50:
-            return 20
+        case mystery.At(p) >= 2:
+            return 30
+        case mystery.At(p) >= 1:
+            return 31
+        case scrum.At(p):
+            return 200
         }
         return MAX_TRAVEL_DISTANCE
-        //result = 5 + distanceToPotentialEnemy.At(p)
     }, func(p Point) bool {
         square := terrain.At(p)
         return !square.HasWater() && !square.HasFriendlyAnt()
+    }, func(p Point) bool {
+        square := terrain.At(p)
+        return !square.HasWater()
+    })
+
+    return distance
+}
+
+func DistanceToDoom(terrain *Terrain, mystery *Mystery, potentialEnemy *PotentialEnemy, scrum *Scrum) *TravelDistance {
+    distance := NewTravelDistance(func(p Point) Distance {
+        switch {
+        case terrain.At(p).HasEnemyHill():
+            return 0
+        case mystery.At(p) >= 50:
+            return 10
+        case potentialEnemy.At(p):
+            return 15
+        case scrum.At(p):
+            return 200
+        }
+        return MAX_TRAVEL_DISTANCE
+    }, func(p Point) bool {
+        square := terrain.At(p)
+        return !square.HasWater()
     }, func(p Point) bool {
         square := terrain.At(p)
         return !square.HasWater()

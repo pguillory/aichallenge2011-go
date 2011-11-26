@@ -10,17 +10,15 @@ import "fmt"
 //import "runtime/debug"
 
 func main() {
-/*
-    go func() {
-        log := NewLog("signals", "txt")
-        for sig := range signal.Incoming {
-            log.WriteString(fmt.Sprintf("signal %v\n%#v\n\n", sig, sig))
-            debug.PrintStack()
-            //if s == os.SIGINT
-            os.Exit(1)
-        }
-    }()
-*/
+    //go func() {
+    //    log := NewLog("signals", "txt")
+    //    for sig := range signal.Incoming {
+    //        log.WriteString(fmt.Sprintf("Caught signal %v\n%#v\n\n", sig, sig))
+    //        panic(fmt.Sprintf("Caught signal %v\n%#v\n\n", sig, sig))
+    //        //if s == os.SIGINT
+    //        //os.Exit(1)
+    //    }
+    //}()
 
 	var bot Bot
 

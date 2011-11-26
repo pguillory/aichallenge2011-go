@@ -1,3 +1,10 @@
+/*
+TODO:
+break into two modules
+tactical
+scent-based
+*/
+
 package main
 
 //import "fmt"
@@ -8,8 +15,8 @@ type Command struct {
     terrain *Terrain
     army *Army
     predictions *Predictions
-    distanceToTrouble, distanceToFood *TravelDistance
-    foragers *PointSet
+    scrum *Scrum
+    distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
     moves, enemyMoves *MoveSet
     enemyDestinations *PointSet
     friendlyFocus, maxFriendlyFocus *Focus
@@ -17,12 +24,15 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToTrouble *TravelDistance) *Command {
+func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, scrum *Scrum, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance) *Command {
     this := new(Command)
     this.terrain = terrain
     this.army = army
     this.predictions = predictions
+    this.scrum = scrum
+    this.distanceToFood = distanceToFood
     this.distanceToTrouble = distanceToTrouble
+    this.distanceToDoom = distanceToDoom
 
     this.Calculate()
     return this
@@ -52,6 +62,8 @@ func (this *Command) Reset() {
         if s.HasWater() || s.HasFood() {
             this.moves.ExcludeMovesTo(p)
             this.enemyMoves.ExcludeMovesTo(p)
+        } else if s.HasFriendlyHill() {
+            this.moves.ExcludeMovesTo(p)
         }
     })
 }
@@ -94,6 +106,8 @@ func (this *Command) PruneOutfocusedMoves() {
     //log.WriteString(fmt.Sprintf("friendlyFocus: %v ms\n", timer.times["friendlyFocus"]))
     //log.WriteString(fmt.Sprintf("%v\n\n", this.friendlyFocus))
 
+    this.scrum.Reset()
+
     for i := 0; i < 10; i++ {
         //log.WriteString(fmt.Sprintf("\n\n*** iteration %v ***\n\n", i))
 
@@ -117,6 +131,10 @@ func (this *Command) PruneOutfocusedMoves() {
                 //log.WriteString(fmt.Sprintf("ExcludeMovesTo(%v)\n", p))
                 this.moves.ExcludeMovesTo(p)
                 changed = true
+
+                ForEachNeighbor(p, func(p2 Point) {
+                    this.scrum.Include(p2)
+                })
             }
         })
         timer.Stop()
@@ -153,6 +171,7 @@ func (this *Command) DoomedAntsTakeHeart() {
     })
 }
 
+/*
 func (this *Command) ValueAt(p Point) float32 {
     //if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
     //    return this.forageScent.At(p) - float32(this.friendlyFocus.At(p)) * 1e30
@@ -166,6 +185,7 @@ func (this *Command) ForageValueAt(p Point) float32 {
     d := this.distanceToFood.At(p)
     return -float32(d * d)
 }
+*/
 
 /*
 func (this *Command) ArmyValueAt(p Point) float32 {
@@ -179,22 +199,52 @@ func (this *Command) ArmyValueAt(p Point) float32 {
 func (this *Command) PickBestMoves() {
     //log := NewTurnLog("PickBestMoves", "txt")
 
+    foragers := AssignForagers(this.terrain)
+
     list := this.moves.OrderedList(func(move Move) float32 {
         //if this.army.IsSoldierAt(move.from) {
         //    return this.ArmyValueAt(move.Destination()) - this.ArmyValueAt(move.from)
         //}
-        if this.foragers.Includes(move.from) {
-            return this.ForageValueAt(move.Destination()) - this.ValueAt(move.from)
+        destination := move.Destination()
+
+        var result int
+        switch {
+        case foragers.Includes(move.from):
+            result += this.distanceToFood.At(move.from)
+            result -= this.distanceToFood.At(destination)
+        case this.distanceToTrouble.At(move.from) < MAX_TRAVEL_DISTANCE:
+            result += this.distanceToTrouble.At(move.from)
+            result -= this.distanceToTrouble.At(destination)
+        default:
+            result += this.distanceToDoom.At(move.from)
+            result -= this.distanceToDoom.At(destination)
         }
-        return this.ValueAt(move.Destination()) - this.ValueAt(move.from)
+
+        //fromFocus := this.friendlyFocus.At(move.from)
+        //if fromFocus >= this.maxFriendlyFocus.At(move.from) {
+        //    result -= int(fromFocus) * 10
+        //} else {
+        //    result += int(fromFocus) * 10
+        //}
+        //
+        //toFocus := this.friendlyFocus.At(destination)
+        //if toFocus >= this.maxFriendlyFocus.At(move.from) {
+        //    result += int(toFocus) * 10
+        //} else {
+        //    result -= int(toFocus) * 10
+        //}
+
+        return float32(result)
     })
 
     list.ForBestWorst(func(move Move) bool {
         return this.moves.Includes(move)
     }, func(move Move) {
+        // best move
         //log.WriteString(fmt.Sprintf("Select %v\n", move))
         this.moves.Select(move)
     }, func(move Move) {
+        // worst move
         if this.moves.At(move.from).IsMultiple() {
             //log.WriteString(fmt.Sprintf("Exclude %v\n", move))
             this.moves.Exclude(move)
@@ -226,13 +276,6 @@ func (this *Command) SaveCrushedAntsAt(p Point) {
 //        p2 = neighbor(p, WEST);  exclude_move(p2, EAST);  save_crushed_ant(p2);
 
 func (this *Command) Calculate() {
-    this.distanceToTrouble.Calculate()
-    this.army.Calculate()
-    this.predictions.Calculate()
-    //this.distanceToTrouble = DistanceToTrouble(this.terrain)
-    this.distanceToFood = DistanceToFood(this.terrain)
-    this.foragers = AssignForagers(this.terrain)
-
     if this.turn == turn {
         return
     }
@@ -256,6 +299,10 @@ func (this *Command) Calculate() {
     //timer.Start("DoomedAntsTakeHeart")
     //this.DoomedAntsTakeHeart()
     //timer.Stop()
+
+    this.distanceToFood.Calculate()
+    this.distanceToTrouble.Calculate()
+    this.distanceToDoom.Calculate()
 
     timer.Start("PickBestMoves")
     this.PickBestMoves()
