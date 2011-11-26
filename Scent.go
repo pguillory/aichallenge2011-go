@@ -2,8 +2,6 @@ package main
 
 import "fmt"
 
-var zero float32
-
 type ScentChannel struct {
     tickValue float32
     northTickValue, eastTickValue, southTickValue, westTickValue *float32
@@ -29,12 +27,6 @@ func NewForageScent(terrain *Terrain, distanceToEnemy *TravelDistance, distanceT
     return NewScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery, ConfigureForageScentChannel)
 }
 
-/*
-func NewBattleScent(terrain *Terrain, distanceToEnemy *TravelDistance, distanceToFriendlyHill *TravelDistance, mystery *Mystery) *Scent {
-    return NewScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery, ConfigureBattleScentChannel)
-}
-*/
-
 func NewScent(terrain *Terrain, distanceToEnemy *TravelDistance, distanceToFriendlyHill *TravelDistance, mystery *Mystery, configureChannel func(*Scent, Point, *ScentChannel)) *Scent {
     this := new(Scent)
     this.terrain = terrain
@@ -47,14 +39,6 @@ func NewScent(terrain *Terrain, distanceToEnemy *TravelDistance, distanceToFrien
     this.Calculate()
     return this
 }
-
-//func (this *Scent) Emanate(p Point, value float32) {
-//    this.value[p.row][p.col] += value
-//}
-//
-//func (this *Scent) Absorb(p Point) {
-//    this.value[p.row][p.col] = 0
-//}
 
 func (this *Scent) ChannelAt(p Point) *ScentChannel {
     return &this.channels[p.row][p.col]
@@ -92,16 +76,12 @@ func (this *Scent) Calculate() {
         this.configureChannel(this, p, this.ChannelAt(p))
     })
 
-    for i := 0; i < 1; i++ {
+    for i := 0; i < 200; i++ {
         this.Spread()
     }
 
     this.time = now() - startTime
     this.turn = turn
-}
-
-func (this *Scent) PreventPropagationFrom(p Point) {
-    this.ChannelAt(p.Neighbor(NORTH)).southTickValue = &zero
 }
 
 func ConfigureForageScentChannel(this *Scent, p Point, channel *ScentChannel) {
@@ -145,50 +125,6 @@ func ConfigureForageScentChannel(this *Scent, p Point, channel *ScentChannel) {
         //}
     }
 }
-
-/*
-func ConfigureBattleScentChannel(this *Scent, p Point, channel *ScentChannel) float32 {
-    //this.value[p.row][p.col] *= 1e-1
-
-    //channel.multiplier *= 0.99
-
-    s := this.terrain.At(p)
-
-    switch {
-    case s.HasHill():
-        if s.IsEnemy() {
-            //channel.additive = 1.0
-            return 1e20
-        } else {
-            channel.multiplier = 0.0
-        }
-    case s.HasAnt():
-        if s.IsEnemy() {
-            switch {
-            case this.distanceToFriendlyHill.At(p) < 20:
-                //channel.additive = 1.0 * float32(20 - this.distanceToFriendlyHill.At(p)) / 20.0
-                return 1e20 * float32(20 - this.distanceToFriendlyHill.At(p)) / 20.0
-            default:
-                //channel.additive = 0.01
-                return 1e12
-            }
-        } else {
-            channel.multiplier *= 1e-2
-        }
-    case s.HasWater():
-        channel.multiplier = 0.0
-    default:
-        //if this.mystery.At(p) > STARTING_MYSTERY {
-        //    channel.additive = this.mystery.At(p) * 0.002
-        //}
-        if this.mystery.At(p) > STARTING_MYSTERY {
-            return this.mystery.At(p) * 1e10
-        }
-    }
-
-    return 0.0
-}
-*/
 
 func (this *Scent) Spread() {
     var p Point

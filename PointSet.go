@@ -8,6 +8,10 @@ func (this *PointSet) Include(p Point) {
     this[p.row][p.col] = true
 }
 
+func (this *PointSet) Exclude(p Point) {
+    this[p.row][p.col] = false
+}
+
 func (this *PointSet) Includes(p Point) bool {
     return this[p.row][p.col]
 }

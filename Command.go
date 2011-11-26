@@ -6,9 +6,10 @@ type Command struct {
     time int64
     turn int
     terrain *Terrain
-    forageScent *Scent
     army *Army
     predictions *Predictions
+    distanceToTrouble, distanceToFood *TravelDistance
+    foragers *PointSet
     moves, enemyMoves *MoveSet
     enemyDestinations *PointSet
     friendlyFocus, maxFriendlyFocus *Focus
@@ -16,13 +17,12 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, forageScent *Scent, army *Army, predictions *Predictions) *Command {
+func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToTrouble *TravelDistance) *Command {
     this := new(Command)
     this.terrain = terrain
-    this.forageScent = forageScent
-    //this.battleScent = battleScent
     this.army = army
     this.predictions = predictions
+    this.distanceToTrouble = distanceToTrouble
 
     this.Calculate()
     return this
@@ -154,10 +154,17 @@ func (this *Command) DoomedAntsTakeHeart() {
 }
 
 func (this *Command) ValueAt(p Point) float32 {
-    if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
-        return this.forageScent.At(p) - float32(this.friendlyFocus.At(p)) * 1e30
-    }
-    return this.forageScent.At(p) + float32(this.friendlyFocus.At(p)) * 1e30
+    //if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
+    //    return this.forageScent.At(p) - float32(this.friendlyFocus.At(p)) * 1e30
+    //}
+    //return this.forageScent.At(p) + float32(this.friendlyFocus.At(p)) * 1e30
+    d := this.distanceToTrouble.At(p)
+    return -float32(d * d)
+}
+
+func (this *Command) ForageValueAt(p Point) float32 {
+    d := this.distanceToFood.At(p)
+    return -float32(d * d)
 }
 
 /*
@@ -169,18 +176,16 @@ func (this *Command) ArmyValueAt(p Point) float32 {
 }
 */
 
-func (this *Command) PickBestMovesByScent() {
-    //log := NewTurnLog("PickBestMovesByScent", "txt")
+func (this *Command) PickBestMoves() {
+    //log := NewTurnLog("PickBestMoves", "txt")
 
     list := this.moves.OrderedList(func(move Move) float32 {
-        //if this.forageScent.At(move.from.Neighbor(NORTH)) < 1e-40 && 
-        //    this.forageScent.At(move.from.Neighbor(EAST)) < 1e-40 &&
-        //    this.forageScent.At(move.from.Neighbor(SOUTH)) < 1e-40 &&
-        //    this.forageScent.At(move.from.Neighbor(WEST)) < 1e-40 {
-
         //if this.army.IsSoldierAt(move.from) {
         //    return this.ArmyValueAt(move.Destination()) - this.ArmyValueAt(move.from)
         //}
+        if this.foragers.Includes(move.from) {
+            return this.ForageValueAt(move.Destination()) - this.ValueAt(move.from)
+        }
         return this.ValueAt(move.Destination()) - this.ValueAt(move.from)
     })
 
@@ -221,10 +226,12 @@ func (this *Command) SaveCrushedAntsAt(p Point) {
 //        p2 = neighbor(p, WEST);  exclude_move(p2, EAST);  save_crushed_ant(p2);
 
 func (this *Command) Calculate() {
-    this.forageScent.Calculate()
-    //this.battleScent.Calculate()
+    this.distanceToTrouble.Calculate()
     this.army.Calculate()
     this.predictions.Calculate()
+    //this.distanceToTrouble = DistanceToTrouble(this.terrain)
+    this.distanceToFood = DistanceToFood(this.terrain)
+    this.foragers = AssignForagers(this.terrain)
 
     if this.turn == turn {
         return
@@ -250,10 +257,10 @@ func (this *Command) Calculate() {
     //this.DoomedAntsTakeHeart()
     //timer.Stop()
 
-    timer.Start("PickBestMovesByScent")
-    this.PickBestMovesByScent()
+    timer.Start("PickBestMoves")
+    this.PickBestMoves()
     timer.Stop()
-    //log.WriteString(fmt.Sprintf("PickBestMovesByScent: %v ms\n", timer.times["PickBestMovesByScent"]))
+    //log.WriteString(fmt.Sprintf("PickBestMoves: %v ms\n", timer.times["PickBestMoves"]))
 
     timer.Start("SaveCrushedAnts")
     this.SaveCrushedAnts()

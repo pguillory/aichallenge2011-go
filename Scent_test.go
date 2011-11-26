@@ -1,8 +1,8 @@
 package main
 
+/*
 import "testing"
 
-/*
 func TestScentCalculateRuntime(t *testing.T) {
     rows = 200
     cols = 160
@@ -37,7 +37,6 @@ func TestScentCalculateRuntime(t *testing.T) {
         t.Errorf("runtime=%v ms\n", runtime)
     }
 }
-*/
 
 func TestScentDissipation(t *testing.T) {
     terrain := NewTerrain(
@@ -64,7 +63,6 @@ func TestScentDissipation(t *testing.T) {
     //}
 }
 
-/*
 func TestCalculate3(t *testing.T) {
     terrain := NewTerrain(
     "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +

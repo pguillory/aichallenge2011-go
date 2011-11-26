@@ -22,7 +22,20 @@ func (this *PointQueue) Push(p Point) {
 }
 
 func (this *PointQueue) ForEach(f func(Point)) {
-    for i := this.start; i != this.end; i = (i + 1) % POINTQUEUE_CAPACITY {
-        f(this.points[i])
+    for this.start != this.end {
+        f(this.points[this.start])
+        if this.start == this.end {
+            break
+        }
+        this.start += 1
+        this.start %= POINTQUEUE_CAPACITY
     }
+}
+
+func (this *PointQueue) Clear() {
+    this.start = this.end
+}
+
+func (this *PointQueue) Size() int {
+    return (this.end - this.start + POINTQUEUE_CAPACITY) % POINTQUEUE_CAPACITY
 }

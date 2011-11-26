@@ -10,20 +10,23 @@ func TestFollowScentThroughMaze(t *testing.T) {
     "%...%...%\n" +
     "%%%%%%%%%")
 
-    distanceToEnemy := DistanceToEnemy(terrain)
-    distanceToFriendlyHill := DistanceToFriendlyHill(terrain)
-    mystery := NewMystery(terrain)
-    forageScent := NewForageScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
+    //distanceToEnemy := DistanceToEnemy(terrain)
+    //distanceToFriendlyHill := DistanceToFriendlyHill(terrain)
+    //mystery := NewMystery(terrain)
+    //forageScent := NewForageScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
     //battleScent := NewBattleScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
     army := NewArmy(terrain)
     predictions := NewPredictions(terrain)
-    command := NewCommand(terrain, forageScent, army, predictions)
+    mystery := NewMystery(terrain)
+    potentialEnemy := NewPotentialEnemy(terrain)
+    distanceToTrouble := DistanceToTrouble(terrain, mystery, potentialEnemy)
+    command := NewCommand(terrain, army, predictions, distanceToTrouble)
 
     if command.At(Point{1, 1}) != SOUTH {
-        t.Error(forageScent)
+        //t.Error(forageScent)
         //t.Error(battleScent)
         t.Error(command)
-        t.Errorf("%v %v", forageScent.At(Point{1, 1}), forageScent.At(Point{2, 1}))
+        //t.Errorf("%v %v", forageScent.At(Point{1, 1}), forageScent.At(Point{2, 1}))
     }
 }
 
@@ -35,14 +38,18 @@ func TestMoves(t *testing.T) {
     "...................................................................%\n" +
     "...................................................................%\n" +
     "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-    distanceToEnemy := DistanceToEnemy(terrain)
-    distanceToFriendlyHill := DistanceToFriendlyHill(terrain)
-    mystery := NewMystery(terrain)
-    forageScent := NewForageScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
+
+    //distanceToEnemy := DistanceToEnemy(terrain)
+    //distanceToFriendlyHill := DistanceToFriendlyHill(terrain)
+    //mystery := NewMystery(terrain)
+    //forageScent := NewForageScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
     //battleScent := NewBattleScent(terrain, distanceToEnemy, distanceToFriendlyHill, mystery)
     army := NewArmy(terrain)
     predictions := NewPredictions(terrain)
-    command := NewCommand(terrain, forageScent, army, predictions)
+    mystery := NewMystery(terrain)
+    potentialEnemy := NewPotentialEnemy(terrain)
+    distanceToTrouble := DistanceToTrouble(terrain, mystery, potentialEnemy)
+    command := NewCommand(terrain, army, predictions, distanceToTrouble)
 
     command.Reset()
     before := command.At(Point{2, 0})
