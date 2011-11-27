@@ -17,6 +17,7 @@ type Command struct {
     predictions *Predictions
     scrum *Scrum
     distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
+    repulsion *Repulsion
     moves, enemyMoves *MoveSet
     enemyDestinations *PointSet
     friendlyFocus, maxFriendlyFocus *Focus
@@ -24,7 +25,7 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, scrum *Scrum, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance) *Command {
+func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, scrum *Scrum, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance, repulsion *Repulsion) *Command {
     this := new(Command)
     this.terrain = terrain
     this.army = army
@@ -33,6 +34,7 @@ func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, scrum *S
     this.distanceToFood = distanceToFood
     this.distanceToTrouble = distanceToTrouble
     this.distanceToDoom = distanceToDoom
+    this.repulsion = repulsion
 
     this.Calculate()
     return this
@@ -207,34 +209,39 @@ func (this *Command) PickBestMoves() {
         //}
         destination := move.Destination()
 
-        var result int
+        var result float32
+
         switch {
         case foragers.Includes(move.from):
-            result += this.distanceToFood.At(move.from)
-            result -= this.distanceToFood.At(destination)
+            result += float32(this.distanceToFood.At(move.from))
+            result -= float32(this.distanceToFood.At(destination))
         case this.distanceToTrouble.At(move.from) < MAX_TRAVEL_DISTANCE:
-            result += this.distanceToTrouble.At(move.from)
-            result -= this.distanceToTrouble.At(destination)
+            result += float32(this.distanceToTrouble.At(move.from))
+            result -= float32(this.distanceToTrouble.At(destination))
         default:
-            result += this.distanceToDoom.At(move.from)
-            result -= this.distanceToDoom.At(destination)
+            result += float32(this.distanceToDoom.At(move.from))
+            result -= float32(this.distanceToDoom.At(destination))
         }
 
-        //fromFocus := this.friendlyFocus.At(move.from)
-        //if fromFocus >= this.maxFriendlyFocus.At(move.from) {
-        //    result -= int(fromFocus) * 10
-        //} else {
-        //    result += int(fromFocus) * 10
-        //}
-        //
-        //toFocus := this.friendlyFocus.At(destination)
-        //if toFocus >= this.maxFriendlyFocus.At(move.from) {
-        //    result += int(toFocus) * 10
-        //} else {
-        //    result -= int(toFocus) * 10
+        //if this.repulsion.To(move) > 0 {
+        //    result -= float32(this.repulsion.To(move)) * 0.2
         //}
 
-        return float32(result)
+        fromFocus := this.friendlyFocus.At(move.from)
+        if fromFocus >= this.maxFriendlyFocus.At(move.from) {
+           result += float32(fromFocus * 10)
+        } else {
+           result -= float32(fromFocus * 10)
+        }
+        
+        toFocus := this.friendlyFocus.At(destination)
+        if toFocus >= this.maxFriendlyFocus.At(destination) {
+           result -= float32(toFocus * 10)
+        } else {
+           result += float32(toFocus * 10)
+        }
+
+        return result
     })
 
     list.ForBestWorst(func(move Move) bool {

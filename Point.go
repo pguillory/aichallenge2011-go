@@ -119,6 +119,9 @@ func ForEachPointWithinManhattanDistance(p Point, distance int, f func(Point)) {
     }
 }
 
+// TODO:
+// use a lookup table for this
+
 func ForEachPointWithinRadius2(p Point, radius2 int, f func(Point)) {
     distance := int(math.Ceil(math.Sqrt(float64(radius2))))
     ForEachPointWithinManhattanDistance(p, distance, func(p2 Point) {

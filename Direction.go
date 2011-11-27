@@ -57,6 +57,22 @@ func (this Direction) Backward() Direction {
     return this
 }
 
+func (this Direction) Index() int {
+    switch this {
+    case NORTH:
+        return 0
+    case EAST:
+        return 1
+    case SOUTH:
+        return 2
+    case WEST:
+        return 3
+    case STAY:
+        return 4
+    }
+    panic("Direction cannot be indexed: " + this.String())
+}
+
 func (this Direction) IsSingle() bool {
     switch this {
     case NORTH:

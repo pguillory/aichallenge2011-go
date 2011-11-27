@@ -37,7 +37,6 @@ func main() {
                     os.Stdout.Sync()
                 	runtime.GC()
                 })
-            	// TODO: yield
             case "ready":
                 bot.Ready()
                 fmt.Println("go")

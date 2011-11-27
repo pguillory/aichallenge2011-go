@@ -1,3 +1,9 @@
+/*
+TODO:
+span 1-square gaps
+use PointQueue
+*/
+
 package main
 
 type Army struct {
@@ -38,6 +44,7 @@ func (this *Army) IsBerzerkerAt(p Point) bool {
 }
 
 func (this *Army) Spread(p Point) {
+    //ForEachPointWithinRadius2(p, 5, func(p2 Point) {
     ForEachPointWithinManhattanDistance(p, 1, func(p2 Point) {
         v, v2 := this.At(p), this.At(p2)
         if 0 < v && v < v2 {

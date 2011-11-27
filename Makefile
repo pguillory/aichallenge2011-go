@@ -20,6 +20,7 @@ GOFILES=\
 	Army.go\
 	Move.go\
 	MoveSet.go\
+	Repulsion.go\
 	Focus.go\
 	OrderedMoveList.go\
 	Command.go\

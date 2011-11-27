@@ -9,6 +9,7 @@ type Bot struct {
     potentialEnemy *PotentialEnemy
     scrum *Scrum
     distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
+    repulsion *Repulsion
     army *Army
     predictions *Predictions
     command *Command
@@ -28,7 +29,8 @@ func (this *Bot) Ready() {
     this.distanceToFood = DistanceToFood(this.terrain)
     this.distanceToTrouble = DistanceToTrouble(this.terrain, this.mystery, this.potentialEnemy, this.scrum)
     this.distanceToDoom = DistanceToDoom(this.terrain, this.mystery, this.potentialEnemy, this.scrum)
-    this.command = NewCommand(this.terrain, this.army, this.predictions, this.scrum, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom)
+    this.repulsion = NewRepulsion(this.terrain)
+    this.command = NewCommand(this.terrain, this.army, this.predictions, this.scrum, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom, this.repulsion)
 
     this.hud = NewLog("hud", "txt")
 }
@@ -68,6 +70,7 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     this.distanceToTrouble.Calculate()
     this.distanceToDoom.Calculate()
 */
+    this.repulsion.Calculate()
     this.command.Calculate()
 
     this.command.ForEach(func(move Move) {
@@ -75,7 +78,6 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     })
     done()
 
-    // TODO: do this in a goroutine
     this.hud.WriteString(fmt.Sprintf("\n%v\n", this.ColorString()))
     this.hud.WriteString(fmt.Sprintf("turn %v, times: map %v, myst %v, potE %v, army %v, pred %v, dF %v, dT %v, dD %v, comm %v", turn,
     this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.command.time))
