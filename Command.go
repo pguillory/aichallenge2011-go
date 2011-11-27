@@ -3,6 +3,8 @@ TODO:
 break into two modules
 tactical
 scent-based
+
+rage virus
 */
 
 package main
@@ -17,7 +19,7 @@ type Command struct {
     predictions *Predictions
     scrum *Scrum
     distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
-    repulsion *Repulsion
+    rageVirus *RageVirus
     moves, enemyMoves *MoveSet
     enemyDestinations *PointSet
     friendlyFocus, maxFriendlyFocus *Focus
@@ -25,7 +27,7 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, scrum *Scrum, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance, repulsion *Repulsion) *Command {
+func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, scrum *Scrum, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance, rageVirus *RageVirus) *Command {
     this := new(Command)
     this.terrain = terrain
     this.army = army
@@ -34,7 +36,7 @@ func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, scrum *S
     this.distanceToFood = distanceToFood
     this.distanceToTrouble = distanceToTrouble
     this.distanceToDoom = distanceToDoom
-    this.repulsion = repulsion
+    this.rageVirus = rageVirus
 
     this.Calculate()
     return this
@@ -64,8 +66,8 @@ func (this *Command) Reset() {
         if s.HasWater() || s.HasFood() {
             this.moves.ExcludeMovesTo(p)
             this.enemyMoves.ExcludeMovesTo(p)
-        } else if s.HasFriendlyHill() {
-            this.moves.ExcludeMovesTo(p)
+        //} else if s.HasFriendlyHill() {
+        //    this.moves.ExcludeMovesTo(p)
         }
     })
 }
@@ -215,12 +217,13 @@ func (this *Command) PickBestMoves() {
         case foragers.Includes(move.from):
             result += float32(this.distanceToFood.At(move.from))
             result -= float32(this.distanceToFood.At(destination))
-        case this.distanceToTrouble.At(move.from) < MAX_TRAVEL_DISTANCE:
-            result += float32(this.distanceToTrouble.At(move.from))
-            result -= float32(this.distanceToTrouble.At(destination))
-        default:
+        case this.rageVirus.InfectedAt(move.from):
             result += float32(this.distanceToDoom.At(move.from))
             result -= float32(this.distanceToDoom.At(destination))
+        //case this.distanceToTrouble.At(move.from) < this.distanceToDoom.At(move.from):
+        default:
+            result += float32(this.distanceToTrouble.At(move.from))
+            result -= float32(this.distanceToTrouble.At(destination))
         }
 
         //if this.repulsion.To(move) > 0 {

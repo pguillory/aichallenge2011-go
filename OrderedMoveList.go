@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "sort"
+import "rand"
 
 type MoveValue struct {
     move Move
@@ -30,6 +31,9 @@ func (this *OrderedMoveList) Len() int {
 }
 
 func (this *OrderedMoveList) Less(i, j int) bool {
+    if this.slice[i].value == this.slice[j].value {
+        return (rand.Intn(2) == 0)
+    }
     return this.slice[i].value < this.slice[j].value
 }
 

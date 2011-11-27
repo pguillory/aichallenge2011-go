@@ -42,6 +42,7 @@ func main() {
                 fmt.Println("go")
                 os.Stdout.Sync()
             case "end":
+                bot.End()
                 os.Exit(0)
             }
         case 2:

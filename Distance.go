@@ -59,8 +59,6 @@ func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *Poten
             return 30
         case mystery.At(p) >= 1:
             return 31
-        case scrum.At(p):
-            return 200
         }
         return MAX_TRAVEL_DISTANCE
     }, func(p Point) bool {
@@ -68,7 +66,7 @@ func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *Poten
         return !square.HasWater() && !square.HasFriendlyAnt()
     }, func(p Point) bool {
         square := terrain.At(p)
-        return !square.HasWater()
+        return !square.HasWater() && !square.HasFriendlyHill()
     })
 
     return distance
@@ -79,12 +77,8 @@ func DistanceToDoom(terrain *Terrain, mystery *Mystery, potentialEnemy *Potentia
         switch {
         case terrain.At(p).HasEnemyHill():
             return 0
-        case mystery.At(p) >= 50:
-            return 10
         case potentialEnemy.At(p):
-            return 15
-        case scrum.At(p):
-            return 200
+            return 10
         }
         return MAX_TRAVEL_DISTANCE
     }, func(p Point) bool {

@@ -7,11 +7,11 @@ type Bot struct {
     terrain, update *Terrain
     mystery *Mystery
     potentialEnemy *PotentialEnemy
-    scrum *Scrum
-    distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
-    repulsion *Repulsion
     army *Army
     predictions *Predictions
+    scrum *Scrum
+    distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
+    rageVirus *RageVirus
     command *Command
     hud *os.File
     hudCenter Point
@@ -29,8 +29,8 @@ func (this *Bot) Ready() {
     this.distanceToFood = DistanceToFood(this.terrain)
     this.distanceToTrouble = DistanceToTrouble(this.terrain, this.mystery, this.potentialEnemy, this.scrum)
     this.distanceToDoom = DistanceToDoom(this.terrain, this.mystery, this.potentialEnemy, this.scrum)
-    this.repulsion = NewRepulsion(this.terrain)
-    this.command = NewCommand(this.terrain, this.army, this.predictions, this.scrum, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom, this.repulsion)
+    this.rageVirus = NewRageVirus(this.terrain, this.army, this.distanceToTrouble)
+    this.command = NewCommand(this.terrain, this.army, this.predictions, this.scrum, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom, this.rageVirus)
 
     this.hud = NewLog("hud", "txt")
 }
@@ -59,6 +59,8 @@ func (this *Bot) SeeDeadAnt(row, col, player int) {
 }
 
 func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
+    startTime := now()
+
     this.terrain.Update(this.update)
 
     this.mystery.Calculate()
@@ -70,7 +72,7 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     this.distanceToTrouble.Calculate()
     this.distanceToDoom.Calculate()
 */
-    this.repulsion.Calculate()
+    this.rageVirus.Calculate()
     this.command.Calculate()
 
     this.command.ForEach(func(move Move) {
@@ -78,9 +80,19 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     })
     done()
 
+    time := now() - startTime
+
     this.hud.WriteString(fmt.Sprintf("\n%v\n", this.ColorString()))
-    this.hud.WriteString(fmt.Sprintf("turn %v, times: map %v, myst %v, potE %v, army %v, pred %v, dF %v, dT %v, dD %v, comm %v", turn,
-    this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.command.time))
+    this.hud.WriteString(fmt.Sprintf("turn %v, time %v (map %v, myst %v, potE %v, army %v, pred %v, dF %v, dT %v, dD %v, comm %v)",
+            turn,
+            time,
+            this.terrain.time,
+            this.mystery.time,
+            this.potentialEnemy.time,
+            this.army.time,
+            this.predictions.time,
+            this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time,
+            this.command.time))
     //NewTurnLog("map", "txt").WriteString(this.terrain.String())
     //NewTurnLog("mystery", "txt").WriteString(this.mystery.String())
     //NewTurnLog("potentialEnemy", "txt").WriteString(this.potentialEnemy.String())
@@ -90,6 +102,10 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     //NewTurnLog("battleScent", "csv").WriteString(this.battleScent.Csv())
     //NewTurnLog("army", "txt").WriteString(this.army.String())
     //NewTurnLog("distanceToTrouble", "txt").WriteString(this.distanceToTrouble.String())
+}
+
+func (this *Bot) End() {
+    this.hud.WriteString(fmt.Sprintf("\nGame over.\n"))
 }
 
 func (this *Bot) ColorString() string {
@@ -128,12 +144,16 @@ func (this *Bot) ColorString() string {
                 }
             case s.HasAnt():
                 if s.IsFriendly() {
+                    character := byte('a')
+                    if this.rageVirus.InfectedAt(p) {
+                        character = byte('A')
+                    }
                     if this.army.IsBerzerkerAt(p) {
-                        return ColorChar{'a' + byte(s.owner), MAGENTA, background, style}
+                        return ColorChar{character + byte(s.owner), MAGENTA, background, style}
                     //} else if this.army.IsSoldierAt(p) {
                     //    return ColorChar{'a' + byte(s.owner), CYAN, background, style}
                     } else {
-                        return ColorChar{'a' + byte(s.owner), GREEN, background, style}
+                        return ColorChar{character + byte(s.owner), GREEN, background, style}
                     }
                 } else {
                     return ColorChar{'a' + byte(s.owner), RED, background, style}

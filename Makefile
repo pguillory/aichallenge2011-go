@@ -23,6 +23,7 @@ GOFILES=\
 	Repulsion.go\
 	Focus.go\
 	OrderedMoveList.go\
+	RageVirus.go\
 	Command.go\
 	Bot.go\
 	MyBot.go\
