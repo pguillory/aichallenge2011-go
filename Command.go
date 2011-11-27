@@ -4,7 +4,7 @@ break into two modules
 tactical
 scent-based
 
-rage virus
+don't rampage wastefully
 */
 
 package main
@@ -63,11 +63,14 @@ func (this *Command) Reset() {
 
     ForEachPoint(func(p Point) {
         s := this.terrain.At(p)
-        if s.HasWater() || s.HasFood() {
+        switch {
+        case s.HasWater() || s.HasFood():
             this.moves.ExcludeMovesTo(p)
             this.enemyMoves.ExcludeMovesTo(p)
-        //} else if s.HasFriendlyHill() {
-        //    this.moves.ExcludeMovesTo(p)
+        case s.HasFriendlyHill():
+            ForEachPointWithinRadius2(p, 5, func(p2 Point) {
+                this.enemyMoves.ExcludeAllFrom(p2)
+            })
         }
     })
 }
@@ -175,40 +178,12 @@ func (this *Command) DoomedAntsTakeHeart() {
     })
 }
 
-/*
-func (this *Command) ValueAt(p Point) float32 {
-    //if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
-    //    return this.forageScent.At(p) - float32(this.friendlyFocus.At(p)) * 1e30
-    //}
-    //return this.forageScent.At(p) + float32(this.friendlyFocus.At(p)) * 1e30
-    d := this.distanceToTrouble.At(p)
-    return -float32(d * d)
-}
-
-func (this *Command) ForageValueAt(p Point) float32 {
-    d := this.distanceToFood.At(p)
-    return -float32(d * d)
-}
-*/
-
-/*
-func (this *Command) ArmyValueAt(p Point) float32 {
-    if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
-        return this.battleScent.At(p) - float32(this.friendlyFocus.At(p)) * 1e30
-    }
-    return this.battleScent.At(p) + float32(this.friendlyFocus.At(p)) * 1e30
-}
-*/
-
 func (this *Command) PickBestMoves() {
     //log := NewTurnLog("PickBestMoves", "txt")
 
     foragers := AssignForagers(this.terrain)
 
     list := this.moves.OrderedList(func(move Move) float32 {
-        //if this.army.IsSoldierAt(move.from) {
-        //    return this.ArmyValueAt(move.Destination()) - this.ArmyValueAt(move.from)
-        //}
         destination := move.Destination()
 
         var result float32
@@ -220,15 +195,10 @@ func (this *Command) PickBestMoves() {
         case this.rageVirus.InfectedAt(move.from):
             result += float32(this.distanceToDoom.At(move.from))
             result -= float32(this.distanceToDoom.At(destination))
-        //case this.distanceToTrouble.At(move.from) < this.distanceToDoom.At(move.from):
         default:
             result += float32(this.distanceToTrouble.At(move.from))
             result -= float32(this.distanceToTrouble.At(destination))
         }
-
-        //if this.repulsion.To(move) > 0 {
-        //    result -= float32(this.repulsion.To(move)) * 0.2
-        //}
 
         fromFocus := this.friendlyFocus.At(move.from)
         if fromFocus >= this.maxFriendlyFocus.At(move.from) {
@@ -251,15 +221,11 @@ func (this *Command) PickBestMoves() {
         return this.moves.Includes(move)
     }, func(move Move) {
         // best move
-        //log.WriteString(fmt.Sprintf("Select %v\n", move))
         this.moves.Select(move)
     }, func(move Move) {
         // worst move
         if this.moves.At(move.from).IsMultiple() {
-            //log.WriteString(fmt.Sprintf("Exclude %v\n", move))
             this.moves.Exclude(move)
-        } else {
-            //log.WriteString(fmt.Sprintf("Exclude %v -- skipped, not multiple\n", move))
         }
     })
 }
