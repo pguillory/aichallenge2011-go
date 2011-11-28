@@ -1,6 +1,9 @@
+// TODO
+// rename to "Reinforcement"
+
 package main
 
-type RageVirus struct {
+type Reinforcement struct {
     time int64
     turn int
     terrain *Terrain
@@ -9,8 +12,8 @@ type RageVirus struct {
     values [MAX_ROWS][MAX_COLS]bool
 }
 
-func NewRageVirus(terrain *Terrain, army *Army, distanceToTrouble *TravelDistance) *RageVirus {
-    this := new(RageVirus)
+func NewReinforcement(terrain *Terrain, army *Army, distanceToTrouble *TravelDistance) *Reinforcement {
+    this := new(Reinforcement)
     this.terrain = terrain
     this.army = army
     this.distanceToTrouble = distanceToTrouble
@@ -19,7 +22,7 @@ func NewRageVirus(terrain *Terrain, army *Army, distanceToTrouble *TravelDistanc
     return this
 }
 
-func (this *RageVirus) ShouldBeInfectedAt(p Point) bool {
+func (this *Reinforcement) ShouldBeInfectedAt(p Point) bool {
     switch {
     case this.distanceToTrouble.At(p) > 50 && !this.terrain.At(p).HasFriendlyHill():
         return true
@@ -27,7 +30,7 @@ func (this *RageVirus) ShouldBeInfectedAt(p Point) bool {
     return false
 }
 
-func (this *RageVirus) ShouldBeCuredAt(p Point) bool {
+func (this *Reinforcement) ShouldBeCuredAt(p Point) bool {
     switch {
     case this.distanceToTrouble.At(p) < 40:
         return true
@@ -35,7 +38,7 @@ func (this *RageVirus) ShouldBeCuredAt(p Point) bool {
     return false
 }
 
-func (this *RageVirus) NeighborInfected(p Point) bool {
+func (this *Reinforcement) NeighborInfected(p Point) bool {
     result := false
     ForEachNeighbor(p, func(p2 Point) {
         if this.InfectedAt(p2) && !this.ShouldBeCuredAt(p2) {
@@ -45,7 +48,7 @@ func (this *RageVirus) NeighborInfected(p Point) bool {
     return result
 }
 
-func (this *RageVirus) Calculate() {
+func (this *Reinforcement) Calculate() {
     if this.turn == turn {
         return
     }
@@ -76,11 +79,11 @@ func (this *RageVirus) Calculate() {
     this.turn = turn
 }
 
-func (this *RageVirus) InfectedAt(p Point) bool {
+func (this *Reinforcement) InfectedAt(p Point) bool {
     return this.values[p.row][p.col]
 }
 
-func (this *RageVirus) String() string {
+func (this *Reinforcement) String() string {
     return GridToString(func(p Point) byte {
         switch {
         case this.terrain.At(p).HasWater():

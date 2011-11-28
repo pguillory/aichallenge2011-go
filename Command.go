@@ -6,6 +6,7 @@ scent-based
 
 don't rampage wastefully
 eliminate swaps
+prune berzerker-1 moves assuming the enemy will STAY
 */
 
 package main
@@ -19,7 +20,7 @@ type Command struct {
     army *Army
     predictions *Predictions
     distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
-    rageVirus *RageVirus
+    reinforcement *Reinforcement
     moves, enemyMoves *MoveSet
     enemyDestinations *PointSet
     friendlyFocus, maxFriendlyFocus *Focus
@@ -27,7 +28,7 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance, rageVirus *RageVirus) *Command {
+func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance, reinforcement *Reinforcement) *Command {
     this := new(Command)
     this.terrain = terrain
     this.army = army
@@ -35,7 +36,7 @@ func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distance
     this.distanceToFood = distanceToFood
     this.distanceToTrouble = distanceToTrouble
     this.distanceToDoom = distanceToDoom
-    this.rageVirus = rageVirus
+    this.reinforcement = reinforcement
 
     this.Calculate()
     return this
@@ -49,14 +50,19 @@ func (this *Command) Reset() {
     this.moves = new(MoveSet)
     this.enemyMoves = new(MoveSet)
 
+    distanceToBerzerker := DistanceToBerzerker(this.terrain, this.army)
+
     ForEachPoint(func(p Point) {
         s := this.terrain.At(p)
         if s.HasFriendlyAnt() {
             this.moves.IncludeAllFrom(p)
         } else if s.HasEnemyAnt() {
-            dir := this.predictions.At(p)
-            this.enemyMoves.Include(Move{p, dir})
-            //this.enemyMoves.IncludeAllFrom(p)
+            // TODO
+            if distanceToBerzerker.At(p) < 6 {
+                this.enemyMoves.IncludeAllFrom(p)
+            } else {
+                this.enemyMoves.Include(Move{p, this.predictions.At(p)})
+            }
         }
     })
 
@@ -79,9 +85,10 @@ func (this *Command) PruneOutfocusedMoves() {
 
     timer := NewTimer()
 
-    timer.Start("berzerkers")
-    berzerkers := this.army.Berzerkers()
-    timer.Stop()
+    //timer.Start("berzerkers")
+    //berzerkers := this.army.Berzerkers()
+    //berzerkerVisibility := berzerkers.Visibility()
+    //timer.Stop()
     //log.WriteString(fmt.Sprintf("berzerkers: %v ms\n", timer.times["berzerkers"]))
     //log.WriteString(fmt.Sprintf("%v\n\n", berzerkers))
 
@@ -101,7 +108,8 @@ func (this *Command) PruneOutfocusedMoves() {
     //log.WriteString(fmt.Sprintf("%v\n\n", enemyVisibility))
 
     timer.Start("friendlyDestinations")
-    friendlyDestinations := this.moves.ExceptFrom(berzerkers).Destinations().Intersection(enemyVisibility)
+    //friendlyDestinations := this.moves.ExceptFrom(berzerkers).Destinations().Intersection(enemyVisibility)
+    friendlyDestinations := this.moves.Destinations().Intersection(enemyVisibility)
     timer.Stop()
     //log.WriteString(fmt.Sprintf("friendlyDestinations: %v ms\n", timer.times["friendlyDestinations"]))
     //log.WriteString(fmt.Sprintf("%v\n\n", friendlyDestinations))
@@ -130,11 +138,20 @@ func (this *Command) PruneOutfocusedMoves() {
         changed := false
 
         timer.Start("excluding moves")
-        friendlyDestinations.ForEach(func(p Point) {
-            if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
-                //log.WriteString(fmt.Sprintf("ExcludeMovesTo(%v)\n", p))
-                this.moves.ExcludeMovesTo(p)
-                changed = true
+        this.moves.ForEach(func(move Move) {
+            p := move.Destination()
+            armySize := this.army.CountAt(move.from)
+            switch {
+            case armySize < 15:
+                if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
+                    this.moves.Exclude(move)
+                    changed = true
+                }
+            case armySize < 25:
+                if this.friendlyFocus.At(p) > this.maxFriendlyFocus.At(p) {
+                    this.moves.Exclude(move)
+                    changed = true
+                }
             }
         })
         timer.Stop()
@@ -185,12 +202,15 @@ func (this *Command) PickBestMoves() {
         case foragers.Includes(move.from):
             result += float32(this.distanceToFood.At(move.from))
             result -= float32(this.distanceToFood.At(destination))
-        case this.rageVirus.InfectedAt(move.from):
+        case this.reinforcement.InfectedAt(move.from):
             result += float32(this.distanceToDoom.At(move.from))
             result -= float32(this.distanceToDoom.At(destination))
         default:
             result += float32(this.distanceToTrouble.At(move.from))
             result -= float32(this.distanceToTrouble.At(destination))
+            if this.terrain.At(destination).HasFriendlyAnt() {
+                result -= 0.1
+            }
         }
 
         fromFocus := this.friendlyFocus.At(move.from)

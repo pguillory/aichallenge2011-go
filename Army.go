@@ -78,7 +78,9 @@ func (this *Army) Calculate() {
 
     var counts [MAX_ROWS * MAX_COLS / 2]uint16
     ForEachPoint(func(p Point) {
-        counts[this.At(p)] += 1
+        if this.At(p) > 0 {
+            counts[this.At(p)] += 1
+        }
     })
     this.counts = counts
 

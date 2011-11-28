@@ -5,6 +5,7 @@ import "os"
 import "bufio"
 import "strings"
 import "strconv"
+import "rand"
 import "fmt"
 //import "os/signal"
 //import "runtime/debug"
@@ -68,6 +69,9 @@ func main() {
                 attackradius2, _ = strconv.Atoi(words[1])
             case "spawnradius2":
                 spawnradius2, _ = strconv.Atoi(words[1])
+            case "player_seed":
+    			player_seed, _ := strconv.Atoi64(words[1])
+    			rand.Seed(player_seed)
             }
         case 3:
             switch words[0] {

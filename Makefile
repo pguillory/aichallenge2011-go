@@ -21,7 +21,7 @@ GOFILES=\
 	MoveSet.go\
 	Focus.go\
 	OrderedMoveList.go\
-	RageVirus.go\
+	Reinforcement.go\
 	Command.go\
 	Bot.go\
 	MyBot.go\

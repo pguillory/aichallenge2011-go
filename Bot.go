@@ -10,7 +10,7 @@ type Bot struct {
     army *Army
     predictions *Predictions
     distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
-    rageVirus *RageVirus
+    reinforcement *Reinforcement
     command *Command
     hud *os.File
     hudCenter Point
@@ -30,8 +30,8 @@ func (this *Bot) Ready() {
     this.distanceToFood = DistanceToFood(this.terrain)
     this.distanceToTrouble = DistanceToTrouble(this.terrain, this.mystery, this.potentialEnemy)
     this.distanceToDoom = DistanceToDoom(this.terrain, this.mystery, this.potentialEnemy)
-    this.rageVirus = NewRageVirus(this.terrain, this.army, this.distanceToTrouble)
-    this.command = NewCommand(this.terrain, this.army, this.predictions, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom, this.rageVirus)
+    this.reinforcement = NewReinforcement(this.terrain, this.army, this.distanceToTrouble)
+    this.command = NewCommand(this.terrain, this.army, this.predictions, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom, this.reinforcement)
 
     this.hud = NewLog("hud", "txt")
 }
@@ -71,7 +71,7 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     this.distanceToFood.Calculate()
     this.distanceToTrouble.Calculate()
     this.distanceToDoom.Calculate()
-    this.rageVirus.Calculate()
+    this.reinforcement.Calculate()
     this.command.Calculate()
 
     this.command.ForEach(func(move Move) {
@@ -120,12 +120,16 @@ func (this *Bot) ColorString() string {
         }
     })
 
-    topLeftCorner := this.hudCenter.Plus(Point{-31, -85})
-    if cols < 170 {
-        topLeftCorner.col -= (cols - 170) / 2
+    viewportSize := Point{63, 170}
+    topLeftCorner := this.hudCenter.Plus(Point{-viewportSize.row / 2, -viewportSize.col / 2})
+    if rows < viewportSize.row {
+        topLeftCorner.row -= (rows - viewportSize.row) / 2
+    }
+    if cols < viewportSize.col {
+        topLeftCorner.col -= (cols - viewportSize.col) / 2
     }
 
-    return GridToColorString(func(p1 Point) ColorChar {
+    return GridToColorString(viewportSize, func(p1 Point) ColorChar {
         p := p1.Plus(topLeftCorner)
         s := this.terrain.At(p)
 
@@ -162,14 +166,14 @@ func (this *Bot) ColorString() string {
                     } else {
                         cc.foreground = GREEN
                     }
-                    if this.rageVirus.InfectedAt(p) {
+                    if this.reinforcement.InfectedAt(p) {
                         cc.foreground += BRIGHT
                     }
                 } else {
                     cc.foreground = RED
                 }
             default:
-                cc.symbol = "."
+                cc.symbol = "‧"
                 if this.potentialEnemy.At(p) {
                     cc.foreground = RED
                 } else {
@@ -181,8 +185,8 @@ func (this *Bot) ColorString() string {
             cc.foreground = BLUE
             // ■ ▓ █
         default:
-            cc.symbol = "?"
-            cc.foreground = WHITE
+            cc.symbol = " "
+            cc.background = WHITE
         }
         return cc
     })

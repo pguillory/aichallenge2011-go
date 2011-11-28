@@ -7,11 +7,11 @@ const (
 
 var turn = 0
 var loadtime = 3000
-var turntime = 1000
+var turntime = 500
 var rows = MAX_ROWS
 var cols = MAX_COLS
-var turns = 500
-var viewradius2 = 55
+var turns = 1500
+var viewradius2 = 77
 var attackradius2 = 5
 var spawnradius2 = 1
 

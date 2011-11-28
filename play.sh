@@ -12,6 +12,7 @@ cd ../tools
 nice -n 15 ./playgame.py --end_wait=0.25 --verbose --log_dir game_logs --turns $turns --turntime 25000 \
  --fill \
  --strict \
+ --serial \
  --map_file maps/symmetric_random_walk/random_walk_01.map \
  "$@" \
  "../go/GoBot" \

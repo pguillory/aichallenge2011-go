@@ -74,14 +74,14 @@ func GridToString(f func(p Point) byte) string {
     return b.String()
 }
 
-func GridToColorString(f func(p Point) ColorChar) string {
+func GridToColorString(viewportSize Point, f func(p Point) ColorChar) string {
     b := new(bytes.Buffer)
     var last ColorChar
 
     max_row := 0
 
     ForEachPoint(func(p Point) {
-        if p.row > 63 || p.col > 170 {
+        if p.row > viewportSize.row || p.col > viewportSize.col {
             return
         }
 

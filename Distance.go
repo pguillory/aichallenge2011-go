@@ -34,7 +34,7 @@ func DistanceToFood(terrain *Terrain) *TravelDistance {
         case terrain.At(p).HasEnemyHill():
             return 0
         case square.HasFood():
-            return 0
+            return 2
         }
         return MAX_TRAVEL_DISTANCE
     }, func(p Point) bool {
@@ -51,6 +51,7 @@ func DistanceToFood(terrain *Terrain) *TravelDistance {
 func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *PotentialEnemy) *TravelDistance {
     distance := NewTravelDistance(func(p Point) Distance {
         switch {
+        // TODO: prioritize enemy ants near friendly hills
         case terrain.At(p).HasEnemyHill():
             return 0
         case mystery.At(p) >= 50:
@@ -85,7 +86,29 @@ func DistanceToDoom(terrain *Terrain, mystery *Mystery, potentialEnemy *Potentia
         return MAX_TRAVEL_DISTANCE
     }, func(p Point) bool {
         square := terrain.At(p)
+        // TODO && !army.IsBerzerker2()
         return !square.HasWater()
+    }, func(p Point) bool {
+        square := terrain.At(p)
+        return !square.HasWater()
+    })
+
+    return distance
+}
+
+func DistanceToBerzerker(terrain *Terrain, army *Army) *TravelDistance {
+    // TODO
+    //not tested!
+
+    distance := NewTravelDistance(func(p Point) Distance {
+        switch {
+        case terrain.At(p).HasFriendlyAnt() && army.IsBerzerkerAt(p):
+            return 0
+        }
+        return MAX_TRAVEL_DISTANCE
+    }, func(p Point) bool {
+        square := terrain.At(p)
+        return !square.HasWater() && !square.HasAnt()
     }, func(p Point) bool {
         square := terrain.At(p)
         return !square.HasWater()
