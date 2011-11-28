@@ -16,11 +16,9 @@ GOFILES=\
 	Distance.go\
 	Situation.go\
 	Prediction.go\
-	AdjacentWater.go\
 	Army.go\
 	Move.go\
 	MoveSet.go\
-	Repulsion.go\
 	Focus.go\
 	OrderedMoveList.go\
 	RageVirus.go\

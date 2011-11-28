@@ -9,7 +9,6 @@ type Bot struct {
     potentialEnemy *PotentialEnemy
     army *Army
     predictions *Predictions
-    scrum *Scrum
     distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
     rageVirus *RageVirus
     command *Command
@@ -18,6 +17,9 @@ type Bot struct {
 }
 
 func (this *Bot) Ready() {
+    //PrepareRadius2Tables(attackradius2)
+    //PrepareRadius2Tables(viewradius2)
+    //PrepareRadius2Tables(SITUATION_RADIUS2)
     VerifySituationSize()
 
     this.terrain = new(Terrain)
@@ -25,12 +27,11 @@ func (this *Bot) Ready() {
     this.potentialEnemy = NewPotentialEnemy(this.terrain)
     this.army = NewArmy(this.terrain)
     this.predictions = NewPredictions(this.terrain)
-    this.scrum = NewScrum()
     this.distanceToFood = DistanceToFood(this.terrain)
-    this.distanceToTrouble = DistanceToTrouble(this.terrain, this.mystery, this.potentialEnemy, this.scrum)
-    this.distanceToDoom = DistanceToDoom(this.terrain, this.mystery, this.potentialEnemy, this.scrum)
+    this.distanceToTrouble = DistanceToTrouble(this.terrain, this.mystery, this.potentialEnemy)
+    this.distanceToDoom = DistanceToDoom(this.terrain, this.mystery, this.potentialEnemy)
     this.rageVirus = NewRageVirus(this.terrain, this.army, this.distanceToTrouble)
-    this.command = NewCommand(this.terrain, this.army, this.predictions, this.scrum, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom, this.rageVirus)
+    this.command = NewCommand(this.terrain, this.army, this.predictions, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom, this.rageVirus)
 
     this.hud = NewLog("hud", "txt")
 }
@@ -67,11 +68,9 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     this.potentialEnemy.Calculate()
     this.army.Calculate()
     this.predictions.Calculate()
-/*
     this.distanceToFood.Calculate()
     this.distanceToTrouble.Calculate()
     this.distanceToDoom.Calculate()
-*/
     this.rageVirus.Calculate()
     this.command.Calculate()
 
@@ -93,6 +92,7 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
             this.predictions.time,
             this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time,
             this.command.time))
+
     //NewTurnLog("map", "txt").WriteString(this.terrain.String())
     //NewTurnLog("mystery", "txt").WriteString(this.mystery.String())
     //NewTurnLog("potentialEnemy", "txt").WriteString(this.potentialEnemy.String())
@@ -106,6 +106,11 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
 
 func (this *Bot) End() {
     this.hud.WriteString(fmt.Sprintf("\nGame over.\n"))
+    //for i, count := range counts {
+    //    if count > 0 {
+    //        fmt.Println("count", i, count)
+    //    }
+    //}
 }
 
 func (this *Bot) ColorString() string {
@@ -115,7 +120,7 @@ func (this *Bot) ColorString() string {
         }
     })
 
-    topLeftCorner := this.hudCenter.Plus(Point{-25, -85})
+    topLeftCorner := this.hudCenter.Plus(Point{-31, -85})
     if cols < 170 {
         topLeftCorner.col -= (cols - 170) / 2
     }
@@ -124,55 +129,61 @@ func (this *Bot) ColorString() string {
         p := p1.Plus(topLeftCorner)
         s := this.terrain.At(p)
 
-        background := BLACK + HIGH_INTENSITY
-        if s.IsVisible() {
-            background -= HIGH_INTENSITY
-        }
+        var cc ColorChar
 
-        style := 0
+        cc.background = BLACK
+        if !s.IsVisible() {
+            cc.background += BRIGHT
+        }
 
         switch {
         case s.HasLand():
             switch {
             case s.HasFood():
-                return ColorChar{'*', YELLOW, background, style}
-            case s.HasAnt() && s.HasHill():
-                if s.IsFriendly() {
-                    return ColorChar{'a' + byte(s.owner), BLACK, HIGH_INTENSITY + GREEN, style}
+                cc.symbol = "*"
+                cc.foreground = YELLOW
+            case s.HasHill():
+                if s.HasAnt() {
+                    cc.symbol = string('a' + byte(s.owner))
                 } else {
-                    return ColorChar{'a' + byte(s.owner), BLACK, HIGH_INTENSITY + RED, style}
+                    cc.symbol = " "
+                }
+                cc.foreground = BLACK
+                if s.IsFriendly() {
+                    cc.background = BRIGHT + GREEN
+                } else {
+                    cc.background = BRIGHT + RED
                 }
             case s.HasAnt():
+                cc.symbol = string('a' + byte(s.owner))
                 if s.IsFriendly() {
-                    character := byte('a')
-                    if this.rageVirus.InfectedAt(p) {
-                        character = byte('A')
-                    }
                     if this.army.IsBerzerkerAt(p) {
-                        return ColorChar{character + byte(s.owner), MAGENTA, background, style}
-                    //} else if this.army.IsSoldierAt(p) {
-                    //    return ColorChar{'a' + byte(s.owner), CYAN, background, style}
+                        cc.foreground = MAGENTA
                     } else {
-                        return ColorChar{character + byte(s.owner), GREEN, background, style}
+                        cc.foreground = GREEN
+                    }
+                    if this.rageVirus.InfectedAt(p) {
+                        cc.foreground += BRIGHT
                     }
                 } else {
-                    return ColorChar{'a' + byte(s.owner), RED, background, style}
+                    cc.foreground = RED
                 }
-            case s.HasHill():
-                if s.IsFriendly() {
-                    return ColorChar{' ', BLACK, HIGH_INTENSITY + GREEN, style}
+            default:
+                cc.symbol = "."
+                if this.potentialEnemy.At(p) {
+                    cc.foreground = RED
                 } else {
-                    return ColorChar{' ', BLACK, HIGH_INTENSITY + RED, style}
+                    cc.foreground = BRIGHT + BLACK
                 }
-            }
-            if this.potentialEnemy.At(p) {
-                return ColorChar{'.', RED, background, style}
-            } else {
-                return ColorChar{'.', HIGH_INTENSITY + BLACK, background, style}
             }
         case s.HasWater():
-            return ColorChar{'%', BLUE, background, style}
+            cc.symbol = "▒"
+            cc.foreground = BLUE
+            // ■ ▓ █
+        default:
+            cc.symbol = "?"
+            cc.foreground = WHITE
         }
-        return ColorChar{'?', WHITE, background, style}
+        return cc
     })
 }

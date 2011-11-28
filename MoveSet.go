@@ -78,6 +78,16 @@ func (this *MoveSet) ExcludeMovesTo(p Point) {
     this.Exclude(Move{p.Neighbor(WEST), EAST})
 }
 
+func (this *MoveSet) ReplaceLoops() {
+    this.ForEach(func(move Move) {
+        destination := move.Destination()
+        if this.At(destination) == move.dir.Backward() {
+            this.dirs[move.from.row][move.from.col] = STAY
+            this.dirs[destination.row][destination.col] = STAY
+        }
+    })
+}
+
 func (this *MoveSet) ForEach(f func(Move)) {
     ForEachPoint(func(p Point) {
         dirs := this.At(p)

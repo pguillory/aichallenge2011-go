@@ -31,6 +31,8 @@ func DistanceToFood(terrain *Terrain) *TravelDistance {
     distance := NewTravelDistance(func(p Point) Distance {
         square := terrain.At(p)
         switch {
+        case terrain.At(p).HasEnemyHill():
+            return 0
         case square.HasFood():
             return 0
         }
@@ -46,7 +48,7 @@ func DistanceToFood(terrain *Terrain) *TravelDistance {
     return distance
 }
 
-func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *PotentialEnemy, scrum *Scrum) *TravelDistance {
+func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *PotentialEnemy) *TravelDistance {
     distance := NewTravelDistance(func(p Point) Distance {
         switch {
         case terrain.At(p).HasEnemyHill():
@@ -72,7 +74,7 @@ func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *Poten
     return distance
 }
 
-func DistanceToDoom(terrain *Terrain, mystery *Mystery, potentialEnemy *PotentialEnemy, scrum *Scrum) *TravelDistance {
+func DistanceToDoom(terrain *Terrain, mystery *Mystery, potentialEnemy *PotentialEnemy) *TravelDistance {
     distance := NewTravelDistance(func(p Point) Distance {
         switch {
         case terrain.At(p).HasEnemyHill():

@@ -5,6 +5,7 @@ tactical
 scent-based
 
 don't rampage wastefully
+eliminate swaps
 */
 
 package main
@@ -17,7 +18,6 @@ type Command struct {
     terrain *Terrain
     army *Army
     predictions *Predictions
-    scrum *Scrum
     distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
     rageVirus *RageVirus
     moves, enemyMoves *MoveSet
@@ -27,12 +27,11 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, scrum *Scrum, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance, rageVirus *RageVirus) *Command {
+func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance, rageVirus *RageVirus) *Command {
     this := new(Command)
     this.terrain = terrain
     this.army = army
     this.predictions = predictions
-    this.scrum = scrum
     this.distanceToFood = distanceToFood
     this.distanceToTrouble = distanceToTrouble
     this.distanceToDoom = distanceToDoom
@@ -113,8 +112,6 @@ func (this *Command) PruneOutfocusedMoves() {
     //log.WriteString(fmt.Sprintf("friendlyFocus: %v ms\n", timer.times["friendlyFocus"]))
     //log.WriteString(fmt.Sprintf("%v\n\n", this.friendlyFocus))
 
-    this.scrum.Reset()
-
     for i := 0; i < 10; i++ {
         //log.WriteString(fmt.Sprintf("\n\n*** iteration %v ***\n\n", i))
 
@@ -138,10 +135,6 @@ func (this *Command) PruneOutfocusedMoves() {
                 //log.WriteString(fmt.Sprintf("ExcludeMovesTo(%v)\n", p))
                 this.moves.ExcludeMovesTo(p)
                 changed = true
-
-                ForEachNeighbor(p, func(p2 Point) {
-                    this.scrum.Include(p2)
-                })
             }
         })
         timer.Stop()
@@ -272,13 +265,9 @@ func (this *Command) Calculate() {
     timer.Stop()
     //log.WriteString(fmt.Sprintf("PruneOutfocusedMoves: %v ms\n", timer.times["PruneOutfocusedMoves"]))
 
-    //timer.Start("DoomedAntsTakeHeart")
-    //this.DoomedAntsTakeHeart()
-    //timer.Stop()
-
-    this.distanceToFood.Calculate()
-    this.distanceToTrouble.Calculate()
-    this.distanceToDoom.Calculate()
+    timer.Start("DoomedAntsTakeHeart")
+    this.DoomedAntsTakeHeart()
+    timer.Stop()
 
     timer.Start("PickBestMoves")
     this.PickBestMoves()
@@ -289,6 +278,8 @@ func (this *Command) Calculate() {
     this.SaveCrushedAnts()
     timer.Stop()
     //log.WriteString(fmt.Sprintf("SaveCrushedAnts: %v ms\n", timer.times["SaveCrushedAnts"]))
+
+    this.moves.ReplaceLoops()
 
     //log.WriteString(fmt.Sprintf("turn %v, timer %v\n", turn, timer))
 

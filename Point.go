@@ -25,16 +25,16 @@ func (this Point) AssertValid() {
 }
 */
 
-func (this Point) Normalize() Point {
-    this.row = normalizeRow(this.row)
-    this.col = normalizeCol(this.col)
-    return this
+func (this Point) Normalize() (result Point) {
+    result.row = normalizeRow(this.row)
+    result.col = normalizeCol(this.col)
+    return
 }
 
-func (this Point) Plus(p Point) Point {
-    this.row = (this.row + p.row + rows * MAX_ROWS) % rows
-    this.col = (this.col + p.col + cols * MAX_COLS) % cols
-    return this
+func (this Point) Plus(p Point) (result Point) {
+    result.row = (this.row + p.row + rows * MAX_ROWS) % rows
+    result.col = (this.col + p.col + cols * MAX_COLS) % cols
+    return
 }
 
 func (this Point) Equals(p Point) bool {
@@ -93,6 +93,9 @@ func (this Point) Neighbor(dir Direction) Point {
         this.row = (this.row + 1       ) % rows
     case WEST:
         this.col = (this.col - 1 + cols) % cols
+    case STAY:
+    default:
+        panic("Can't find neighbor to " + dir.String())
     }
     return this
 }
@@ -111,16 +114,47 @@ func ForEachPoint(f func(Point)) {
 }
 
 func ForEachPointWithinManhattanDistance(p Point, distance int, f func(Point)) {
-    var d, s Point
-    for d.row, s.row = -distance, 0; d.row <= distance && s.row < rows; d.row, s.row = d.row + 1, s.row + 1 {
-        for d.col, s.col = -distance, 0; d.col <= distance && s.col < cols; d.col, s.col = d.col + 1, s.col + 1 {
-            f(p.Plus(d))
-        }
-    }
+   var d, s Point
+   for d.row, s.row = -distance, 0; d.row <= distance && s.row < rows; d.row, s.row = d.row + 1, s.row + 1 {
+       for d.col, s.col = -distance, 0; d.col <= distance && s.col < cols; d.col, s.col = d.col + 1, s.col + 1 {
+           f(p.Plus(d))
+       }
+   }
 }
 
-// TODO:
-// use a lookup table for this
+/*
+// Radius lookup tables. Only slightly faster -- 23.8s vs 24.3s.  Not worth the complexity.
+var radiusTables [200][]Point
+
+func PrepareRadius2Tables(radius2 int) {
+    distance := int(math.Ceil(math.Sqrt(float64(radius2))))
+
+    radiusTables[radius2] = make([]Point, rows * cols, rows * cols)
+    count := 0
+
+    var d Point
+    for d.row = -distance; d.row <= distance; d.row++ {
+        for d.col = -distance; d.col <= distance; d.col++ {
+            if d.row * d.row + d.col * d.col <= radius2 {
+                radiusTables[radius2][count] = d
+                count += 1
+            }
+        }
+    }
+
+    radiusTables[radius2] = radiusTables[radius2][0:count]
+}
+
+func ForEachPointWithinRadius2(p Point, radius2 int, f func(Point)) {
+    if len(radiusTables[radius2]) == 0 {
+        PrepareRadius2Tables(radius2)
+    }
+
+    for _, d := range radiusTables[radius2] {
+        f(p.Plus(d))
+    }
+}
+*/
 
 func ForEachPointWithinRadius2(p Point, radius2 int, f func(Point)) {
     distance := int(math.Ceil(math.Sqrt(float64(radius2))))
@@ -130,6 +164,7 @@ func ForEachPointWithinRadius2(p Point, radius2 int, f func(Point)) {
         }
     })
 }
+
 
 func ForEachNeighbor(p Point, f func(Point)) {
     f(p.Neighbor(NORTH))

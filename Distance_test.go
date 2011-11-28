@@ -12,8 +12,7 @@ func TestTravelDistance(t *testing.T) {
 
     mystery := NewMystery(terrain)
     potentialEnemy := NewPotentialEnemy(terrain)
-    scrum := NewScrum()
-    distanceToTrouble := DistanceToTrouble(terrain, mystery, potentialEnemy, scrum)
+    distanceToTrouble := DistanceToTrouble(terrain, mystery, potentialEnemy)
 
     if distanceToTrouble.At(Point{1, 1}) <= distanceToTrouble.At(Point{2, 1}) {
         t.Error(terrain)

@@ -44,6 +44,7 @@ func (this *Army) IsBerzerkerAt(p Point) bool {
 }
 
 func (this *Army) Spread(p Point) {
+    //ForEachNeighbor(p, func(p2 Point) {
     //ForEachPointWithinRadius2(p, 5, func(p2 Point) {
     ForEachPointWithinManhattanDistance(p, 1, func(p2 Point) {
         v, v2 := this.At(p), this.At(p2)

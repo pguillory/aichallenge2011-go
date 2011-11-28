@@ -14,14 +14,14 @@ const (
     CYAN    = 6
     WHITE   = 7
 
-    HIGH_INTENSITY = 60
+    BRIGHT = 60
     BOLD = 1
     UNDERLINE = 4
 )
 
 type ColorChar struct {
-    c byte
-    foreground, background, style int
+    symbol string
+    foreground, background int
 }
 
 func ForEachPointAndLine(pointFunc func(p Point), lineFunc func()) {
@@ -81,7 +81,7 @@ func GridToColorString(f func(p Point) ColorChar) string {
     max_row := 0
 
     ForEachPoint(func(p Point) {
-        if p.row > 50 || p.col > 170 {
+        if p.row > 63 || p.col > 170 {
             return
         }
 
@@ -105,7 +105,9 @@ func GridToColorString(f func(p Point) ColorChar) string {
             b.WriteString(fmt.Sprintf("%c[%vm", 27, cc.background))
         }
         last = cc
-        b.WriteByte(cc.c)
+        //b.WriteByte(cc.c)
+        //b.WriteString(fmt.Sprintf("%c%c%c", 0xe2, 0x89, 0xa1))
+        b.WriteString(cc.symbol)
     })
 
     b.WriteString(fmt.Sprintf("%c[0m", 27))
