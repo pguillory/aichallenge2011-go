@@ -20,6 +20,7 @@ func TestTravelDistance(t *testing.T) {
     }
 }
 
+/*
 func TestAssignForagers(t *testing.T) {
     terrain := NewTerrain(
         "%%%%%%%%%%%%%%%%%\n" +
@@ -44,32 +45,33 @@ func TestAssignForagers(t *testing.T) {
         t.Error(distanceToFood)
     }
 }
+*/
 
-func TestDistanceToBerzerker(t *testing.T) {
+func TestDistanceToSoldier(t *testing.T) {
     terrain := NewTerrain(
-        "%%%%%%%%%%%%%%%%%\n" +
-        "%aaaaa....b.b...%\n" +
-        "%aaaaaa...bbb...%\n" +
-        "%aaaaaaa..b.....%\n" +
-        "%aaaaaaa..b.....%\n" +
-        "%aaaaaaa........%\n" +
-        "%%%%%%%%%%%%%%%%%\n" +
-        "%aaaaa....b.....%\n" +
-        "%%%%%%%%%%%%%%%%%")
+        "%%%%%%%%%%%%%%%%\n" +
+        "%aaaa....b.b...%\n" +
+        "%aaaaa...bbb...%\n" +
+        "%aaaaaa..b.....%\n" +
+        "%aaaaaa..b.....%\n" +
+        "%aaaaaa........%\n" +
+        "%%%%%%%%%%%%%%%%\n" +
+        "%aaaa....b.....%\n" +
+        "%%%%%%%%%%%%%%%%")
 
     expected :=
-	    "+++++++++++++++++\n" +
-	    "+0000012345+babc+\n" +
-	    "+0000001234789ab+\n" +
-	    "+00000001236789a+\n" +
-	    "+000000012356789+\n" +
-	    "+000000012345678+\n" +
-	    "+++++++++++++++++\n" +
-	    "+++++++++++++++++\n" +
-	    "+++++++++++++++++"
+	    "++++++++++++++++\n" +
+	    "+000012345++a+++\n" +
+	    "+000001234789a++\n" +
+	    "+0000001236789a+\n" +
+	    "+00000012356789+\n" +
+	    "+00000012345678+\n" +
+	    "++++++++++++++++\n" +
+	    "++++++++++++++++\n" +
+	    "++++++++++++++++"
 
     army := NewArmy(terrain)
-    distanceToBerzerker := DistanceToBerzerker(terrain, army)
+    distanceToBerzerker := DistanceToSoldier(terrain, army)
 
     if distanceToBerzerker.String() != expected {
         t.Error(army)

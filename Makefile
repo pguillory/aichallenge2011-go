@@ -10,6 +10,7 @@ GOFILES=\
 	Player.go\
 	Square.go\
 	Terrain.go\
+	Foraging.go\
 	Mystery.go\
 	PotentialEnemy.go\
 	Scrum.go\

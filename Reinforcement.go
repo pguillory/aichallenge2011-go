@@ -41,7 +41,7 @@ func (this *Reinforcement) ShouldBeCuredAt(p Point) bool {
 func (this *Reinforcement) NeighborInfected(p Point) bool {
     result := false
     ForEachNeighbor(p, func(p2 Point) {
-        if this.InfectedAt(p2) && !this.ShouldBeCuredAt(p2) {
+        if this.At(p2) && !this.ShouldBeCuredAt(p2) {
             result = true
         }
     })
@@ -60,7 +60,7 @@ func (this *Reinforcement) Calculate() {
         switch {
         case this.terrain.At(p).HasFriendlyAnt() == false:
             newValues[p.row][p.col] = false
-        case this.InfectedAt(p):
+        case this.At(p):
             if this.ShouldBeCuredAt(p) {
                 newValues[p.row][p.col] = false
             } else {
@@ -79,7 +79,7 @@ func (this *Reinforcement) Calculate() {
     this.turn = turn
 }
 
-func (this *Reinforcement) InfectedAt(p Point) bool {
+func (this *Reinforcement) At(p Point) bool {
     return this.values[p.row][p.col]
 }
 
@@ -89,7 +89,7 @@ func (this *Reinforcement) String() string {
         case this.terrain.At(p).HasWater():
             return '%'
         case this.terrain.At(p).HasFriendlyAnt():
-            if this.InfectedAt(p) {
+            if this.At(p) {
                 return 'A'
             } else {
                 return 'a'

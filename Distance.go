@@ -4,14 +4,15 @@ package main
 
 type Distance uint16
 
-const MAX_TRAVEL_DISTANCE = MAX_ROWS * MAX_COLS
+const MAX_TRAVEL_DISTANCE = Distance(MAX_ROWS * MAX_COLS)
 
 type TravelDistance struct {
     time int64
     turn int
     value [MAX_ROWS][MAX_COLS]Distance
-    initialValue func(p Point) Distance
-    isEnterable, isExitable func(p Point) bool
+    initialValue func(Point) Distance
+    isEnterable, isExitable func(Point, Distance, Direction) bool
+    max Distance
 }
 
 func DistanceToFriendlyHill(terrain *Terrain) *TravelDistance {
@@ -20,11 +21,11 @@ func DistanceToFriendlyHill(terrain *Terrain) *TravelDistance {
             return 0
         }
         return MAX_TRAVEL_DISTANCE
-    }, func(p Point) bool {
+    }, func(p Point, distance Distance, dir Direction) bool {
         return terrain.At(p).HasLand()
-    }, func(p Point) bool {
+    }, func(p Point, distance Distance, dir Direction) bool {
         return terrain.At(p).HasLand()
-    })
+    }, 20)
 }
 
 func DistanceToFood(terrain *Terrain) *TravelDistance {
@@ -37,18 +38,36 @@ func DistanceToFood(terrain *Terrain) *TravelDistance {
             return 2
         }
         return MAX_TRAVEL_DISTANCE
-    }, func(p Point) bool {
+    }, func(p Point, distance Distance, dir Direction) bool {
         square := terrain.At(p)
-        return !square.HasWater()
-    }, func(p Point) bool {
+        return square.HasLand()
+    }, func(p Point, distance Distance, dir Direction) bool {
         square := terrain.At(p)
-        return !square.HasWater()
-    })
+        return square.HasLand()
+    }, 22)
 
     return distance
 }
 
+//func DistanceToFewerFriendliesThan(max byte, terrain *Terrain) *TravelDistance {
+//    return NewTravelDistance(func(p Point) Distance {
+//        if terrain.VisibleFriendliesAt(p) < max {
+//            return 0
+//        }
+//        return MAX_TRAVEL_DISTANCE
+//    }, func(p Point) bool {
+//        square := terrain.At(p)
+//        return !square.HasWater() && !square.HasFriendlyAnt()
+//    }, func(p Point) bool {
+//        square := terrain.At(p)
+//        return !square.HasWater() && !square.HasFriendlyHill()
+//    }, 50)
+//}
+
 func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *PotentialEnemy) *TravelDistance {
+    //var distanceToFewerFriendliesThan []*TravelDistance
+    //distanceToFewerFriendliesThan[1].At(p)
+
     distance := NewTravelDistance(func(p Point) Distance {
         switch {
         // TODO: prioritize enemy ants near friendly hills
@@ -64,13 +83,13 @@ func DistanceToTrouble(terrain *Terrain, mystery *Mystery, potentialEnemy *Poten
             return 31
         }
         return MAX_TRAVEL_DISTANCE
-    }, func(p Point) bool {
+    }, func(p Point, distance Distance, dir Direction) bool {
         square := terrain.At(p)
         return !square.HasWater() && !square.HasFriendlyAnt()
-    }, func(p Point) bool {
+    }, func(p Point, distance Distance, dir Direction) bool {
         square := terrain.At(p)
         return !square.HasWater() && !square.HasFriendlyHill()
-    })
+    }, MAX_TRAVEL_DISTANCE)
 
     return distance
 }
@@ -84,39 +103,40 @@ func DistanceToDoom(terrain *Terrain, mystery *Mystery, potentialEnemy *Potentia
             return 10
         }
         return MAX_TRAVEL_DISTANCE
-    }, func(p Point) bool {
+    }, func(p Point, distance Distance, dir Direction) bool {
         square := terrain.At(p)
         // TODO && !army.IsBerzerker2()
         return !square.HasWater()
-    }, func(p Point) bool {
+    }, func(p Point, distance Distance, dir Direction) bool {
         square := terrain.At(p)
         return !square.HasWater()
-    })
+    }, MAX_TRAVEL_DISTANCE)
 
     return distance
 }
 
-func DistanceToBerzerker(terrain *Terrain, army *Army) *TravelDistance {
+func DistanceToSoldier(terrain *Terrain, army *Army) *TravelDistance {
     // TODO
     //not tested!
 
     distance := NewTravelDistance(func(p Point) Distance {
         switch {
-        case terrain.At(p).HasFriendlyAnt() && army.IsBerzerkerAt(p):
+        case terrain.At(p).HasFriendlyAnt() && army.IsSoldierAt(p):
             return 0
         }
         return MAX_TRAVEL_DISTANCE
-    }, func(p Point) bool {
+    }, func(p Point, distance Distance, dir Direction) bool {
         square := terrain.At(p)
         return !square.HasWater() && !square.HasAnt()
-    }, func(p Point) bool {
+    }, func(p Point, distance Distance, dir Direction) bool {
         square := terrain.At(p)
         return !square.HasWater()
-    })
+    }, 10)
 
     return distance
 }
 
+/*
 func AssignForagers(terrain *Terrain) *PointSet {
     land := new(PointSet)
     food := new(PointSet)
@@ -145,44 +165,45 @@ func AssignForagers(terrain *Terrain) *PointSet {
 
     return foragers
 }
+*/
 
-func FindNearestMoveTo(destination Point, within Distance, passablePoints, fromPoints *PointSet) (result Move, found bool) {
-    var values [MAX_ROWS][MAX_COLS]Distance
-    var queue PointQueue
+func WhichWay(origin, destination, nextDestination Point, passablePoints *PointSet) (result Direction) {
+    checked := new(PointSet)
+    queue := new(PointQueue)
 
-    values[destination.row][destination.col] = MAX_TRAVEL_DISTANCE
-
+    checked.Include(destination)
     queue.Push(destination)
 
-    queue.ForEach(func(p Point) {
-        value := values[p.row][p.col]
-        if MAX_TRAVEL_DISTANCE - value <= within {
-            ForEachDirection(func(dir Direction) {
-                p2 := p.Neighbor(dir)
+    found := false
 
-                if values[p2.row][p2.col] < value - 1 {
-                    switch {
-                    case fromPoints.Includes(p2):
-                        result = Move{p2, dir.Backward()}
-                        found = true
-                        queue.Clear()
-                    case passablePoints.Includes(p2):
-                        values[p2.row][p2.col] = value - 1
-                        queue.Push(p2)
-                    }
-                }
-            })
-        }
+    queue.ForEach(func(p Point) {
+        ForEachDirection(func(dir Direction) {
+            p2 := p.Neighbor(dir)
+
+            switch {
+            case found:
+            case checked.Includes(p2):
+            case origin.Equals(p2):
+                result = dir.Backward()
+                found = true
+
+                queue.Clear()
+            case passablePoints.Includes(p2):
+                checked.Include(p2)
+                queue.Push(p2)
+            }
+        })
     })
 
     return
 }
 
-func NewTravelDistance(initialValue func(p Point) Distance, isEnterable, isExitable func(p Point) bool) *TravelDistance {
+func NewTravelDistance(initialValue func(Point) Distance, isEnterable, isExitable func(Point, Distance, Direction) bool, max Distance) *TravelDistance {
     this := new(TravelDistance)
     this.initialValue = initialValue
     this.isExitable = isExitable
     this.isEnterable = isEnterable
+    this.max = max
 
     this.Calculate()
     return this
@@ -202,7 +223,7 @@ func (this *TravelDistance) Calculate() {
     ForEachPoint(func(p Point) {
         value := this.initialValue(p)
         this.value[p.row][p.col] = value
-        if value < MAX_TRAVEL_DISTANCE {
+        if value < this.max {
             queue.Push(p)
         }
     })
@@ -210,15 +231,16 @@ func (this *TravelDistance) Calculate() {
     //fmt.Printf("%v in queue\n", queue.Size())
 
     queue.ForEach(func(p Point) {
-        v := this.value[p.row][p.col]
+        distance := this.value[p.row][p.col] + 1
         //fmt.Printf("got %v: %v\n", p, v)
 
-        ForEachNeighbor(p, func(p2 Point) {
-            if this.value[p2.row][p2.col] > v + 1 {
-                if this.isExitable(p2) {
-                    //fmt.Printf("spreading to %v\n", p2)
-                    this.value[p2.row][p2.col] = v + 1
-                    if this.isEnterable(p2) {
+        ForEachDirection(func(dir Direction) {
+            p2 := p.Neighbor(dir)
+            distance2 := this.value[p2.row][p2.col]
+            if distance2 > distance && distance <= this.max {
+                if this.isExitable(p2, distance, dir) {
+                    this.value[p2.row][p2.col] = distance
+                    if this.isEnterable(p2, distance, dir) {
                         queue.Push(p2)
                     }
                 } else {

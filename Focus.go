@@ -12,6 +12,13 @@ func OpposingFocus(destinations *PointSet, opposingMoves *MoveSet) *Focus {
     return this
 }
 
+func (this *Focus) UpdateOpposingFocus(destinations *PointSet, opposingMoves *MoveSet) {
+    destinations.ForEach(func(p Point) {
+        this[p.row][p.col] = opposingMoves.FocusOn(p)
+    })
+}
+
+
 func MaxFocus(destinations *PointSet, focus *Focus) *Focus {
     this := new(Focus)
 

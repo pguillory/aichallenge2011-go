@@ -143,11 +143,15 @@ type Predictions struct {
     terrain *Terrain
     oldTerrain Terrain
     observations [MAX_PLAYERS]ObservationSlab
+    ants, oldAnts [10]*PointSet
 }
 
 func NewPredictions(terrain *Terrain) *Predictions {
     this := new(Predictions)
     this.terrain = terrain
+    ForEachEnemyPlayer(func(player Player) {
+        this.oldAnts[player] = new(PointSet)
+    })
 
     this.Calculate()
     return this
@@ -159,73 +163,89 @@ func (this *Predictions) Calculate() {
     }
     startTime := now()
 
-    //log := NewTurnLog("predictions", "txt")
+    timer := NewTimer()
+    //log := NewLog("predictions", "txt")
+
+    timer.Start("reset")
+    ForEachEnemyPlayer(func(player Player) {
+        this.ants[player] = new(PointSet)
+    })
+
+    ForEachPoint(func(p Point) {
+        square := this.terrain.At(p)
+        if square.HasEnemyAnt() {
+            this.ants[square.owner].Include(p)
+        }
+    })
+    timer.Stop()
 
     ForEachEnemyPlayer(func(player Player) {
-        //log.WriteString(fmt.Sprintf("player %v\n", player))
-
-        found := false
-
         moves := new(MoveSet)
-        ForEachPoint(func(p Point) {
-            if this.oldTerrain.At(p).HasAntBelongingTo(player) {
-                ForEachDirection(func(dir Direction) {
-                    if !(dir.Includes(EAST | SOUTH) && this.terrain.At(p).HasAnt()) {
-                        p2 := p.Neighbor(dir)
-                        if this.terrain.At(p2).HasAntBelongingTo(player) {
-                            found = true
-                            moves.Include(Move{p, dir})
-                        }
+
+        this.oldAnts[player].ForEach(func(p Point) {
+            ForEachDirection(func(dir Direction) {
+                if !(dir.Includes(EAST | SOUTH) && this.ants[player].Includes(p)) {
+                    p2 := p.Neighbor(dir)
+                    if this.ants[player].Includes(p2) {
+                        moves.Include(Move{p, dir})
                     }
-                })
-            }
+                }
+            })
         })
 
-        if found {
-            //log.WriteString(fmt.Sprintf("before elimination, %v moves\n", moves.Cardinality()))
+        //if !(dir.Includes(EAST | SOUTH) && this.terrain.At(p).HasAnt()) {
 
-            //moves.EliminateLoops()
+        //log.WriteString(fmt.Sprintf("before elimination, %v moves\n", moves.Cardinality()))
 
-            moves.ForEach(func(move Move) {
-                if move.dir.IsSingle() {
-                    moves.Select(move)
+        //moves.EliminateLoops()
+
+        timer.Start("prune")
+        this.oldAnts[player].ForEach(func(p Point) {
+            dir := moves.At(p)
+            if dir.IsSingle() {
+                moves.Select(Move{p, dir})
+            }
+        })
+        timer.Stop()
+
+        //log.WriteString(fmt.Sprintf("after elimination, %v moves\n", moves.Cardinality()))
+
+
+        timer.Start("add")
+        this.oldAnts[player].ForEach(func(p Point) {
+            dir := moves.At(p)
+            if dir.IsSingle() {
+                //log.WriteString(fmt.Sprintf("move: %v\n", move))
+
+                situation, friendlyNearby := NewSituation(&this.oldTerrain, p)
+
+                //log.WriteString(fmt.Sprintf("%v\n", situation))
+
+                if friendlyNearby {
+                    this.observations[player].Add(situation, dir)
+
+                    //log.WriteString(fmt.Sprintf("added\n\n"))
+                } else {
+                    //log.WriteString(fmt.Sprintf("not relevant\n\n"))
                 }
-            })
+            }
+        })
+        timer.Stop()
 
-            //log.WriteString(fmt.Sprintf("after elimination, %v moves\n", moves.Cardinality()))
-
-            moves.ForEach(func(move Move) {
-                if move.dir.IsSingle() {
-                    //log.WriteString(fmt.Sprintf("move: %v\n", move))
-
-                    situation, friendlyNearby := NewSituation(&this.oldTerrain, move.from)
-
-                    //log.WriteString(fmt.Sprintf("%v\n", situation))
-
-                    if friendlyNearby {
-                        this.observations[player].Add(situation, move.dir)
-
-                        //log.WriteString(fmt.Sprintf("added\n\n"))
-                    } else {
-                        //log.WriteString(fmt.Sprintf("not relevant\n\n"))
-                    }
-                }
-            })
-
-            //log.WriteString(fmt.Sprintf("player %v has %v observations\n", player, this.observations[player].length))
-            //this.observations[player].ForEach(func(observation *Observation) {
-            //    log.WriteString(fmt.Sprintf("%v\n", observation))
-            //})
-        }
+        //log.WriteString(fmt.Sprintf("player %v has %v observations\n", player, this.observations[player].length))
+        //this.observations[player].ForEach(func(observation *Observation) {
+        //    //log.WriteString(fmt.Sprintf("%v\n", observation))
+        //})
     })
 
     //log.WriteString(fmt.Sprintf("saving terrain\n"))
+    this.oldAnts = this.ants
     this.oldTerrain = *this.terrain
-
-    //log.WriteString(fmt.Sprintf("done\n"))
 
     this.time = now() - startTime
     this.turn = turn
+
+    //log.WriteString(fmt.Sprintf("%3v + %3v + %3v = %3v\n", timer.times["reset"], timer.times["prune"], timer.times["add"], this.time))
 }
 
 func (this *Predictions) At(p Point) Direction {

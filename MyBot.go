@@ -1,5 +1,8 @@
 package main
 
+// TODO
+// debug switch
+
 import "runtime"
 import "os"
 import "bufio"
@@ -12,9 +15,9 @@ import "fmt"
 
 func main() {
     //go func() {
-    //    log := NewLog("signals", "txt")
+    //    //log := NewLog("signals", "txt")
     //    for sig := range signal.Incoming {
-    //        log.WriteString(fmt.Sprintf("Caught signal %v\n%#v\n\n", sig, sig))
+    //        //log.WriteString(fmt.Sprintf("Caught signal %v\n%#v\n\n", sig, sig))
     //        panic(fmt.Sprintf("Caught signal %v\n%#v\n\n", sig, sig))
     //        //if s == os.SIGINT
     //        //os.Exit(1)

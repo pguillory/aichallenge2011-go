@@ -82,16 +82,13 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     time := now() - startTime
 
     this.hud.WriteString(fmt.Sprintf("\n%v\n", this.ColorString()))
-    this.hud.WriteString(fmt.Sprintf("turn %v, time %v (map %v, myst %v, potE %v, army %v, pred %v, dF %v, dT %v, dD %v, comm %v)",
-            turn,
-            time,
-            this.terrain.time,
-            this.mystery.time,
-            this.potentialEnemy.time,
-            this.army.time,
-            this.predictions.time,
-            this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time,
-            this.command.time))
+    this.hud.
+    WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dF %3v, dT %3v, dD %3v, re %3v, comm %3v)",
+            turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
+
+    //NewLog("time", "txt").
+    //WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dF %3v, dT %3v, dD %3v, re %3v, comm %3v)\n",
+    //        turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
 
     //NewTurnLog("map", "txt").WriteString(this.terrain.String())
     //NewTurnLog("mystery", "txt").WriteString(this.mystery.String())
@@ -161,12 +158,17 @@ func (this *Bot) ColorString() string {
             case s.HasAnt():
                 cc.symbol = string('a' + byte(s.owner))
                 if s.IsFriendly() {
-                    if this.army.IsBerzerkerAt(p) {
-                        cc.foreground = MAGENTA
-                    } else {
+                    switch {
+                    case this.army.IsScoutAt(p):
                         cc.foreground = GREEN
+                    case this.army.IsSoldierAt(p):
+                        cc.foreground = CYAN
+                    case this.army.IsBerzerkerAt(p):
+                        cc.foreground = MAGENTA
+                    default:
+                        cc.foreground = WHITE
                     }
-                    if this.reinforcement.InfectedAt(p) {
+                    if this.reinforcement.At(p) {
                         cc.foreground += BRIGHT
                     }
                 } else {
@@ -183,7 +185,6 @@ func (this *Bot) ColorString() string {
         case s.HasWater():
             cc.symbol = "▒"
             cc.foreground = BLUE
-            // ■ ▓ █
         default:
             cc.symbol = " "
             cc.background = WHITE
