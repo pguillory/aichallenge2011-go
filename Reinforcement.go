@@ -1,6 +1,3 @@
-// TODO
-// rename to "Reinforcement"
-
 package main
 
 type Reinforcement struct {

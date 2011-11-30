@@ -1,8 +1,5 @@
 package main
 
-// TODO
-// debug switch
-
 import "runtime"
 import "os"
 import "bufio"
@@ -10,10 +7,14 @@ import "strings"
 import "strconv"
 import "rand"
 import "fmt"
+import "flag"
 //import "os/signal"
 //import "runtime/debug"
 
 func main() {
+    flag.BoolVar(&debug, "debug", false, "debug mode")
+    flag.Parse()
+
     //go func() {
     //    //log := NewLog("signals", "txt")
     //    for sig := range signal.Incoming {

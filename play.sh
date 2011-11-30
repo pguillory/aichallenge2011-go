@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
-turns=$1
-shift
+#turns=$1
+#shift
 
 cd `dirname $0`
 gomake
@@ -9,17 +9,20 @@ gomake
 cd ../tools
 # --player_seed 42 
 # --map_file maps/test.map \
-nice -n 15 ./playgame.py --end_wait=0.25 --verbose --log_dir game_logs --turns $turns --turntime 25000 \
+./playgame.py --verbose --log_dir game_logs --turntime 500 \
  --fill \
  --strict \
  --serial \
- --map_file maps/symmetric_random_walk/random_walk_01.map \
+ --map_file maps/random_walk/random_walk_03p_01.map \
  "$@" \
- "../go/GoBot" \
+ "../go/GoBot -debug" \
  "../c/CBot" \
- "python sample_bots/python/LeftyBot.py" \
+
+ # "python sample_bots/python/LeftyBot.py" \
 
 
+
+ # --map_file maps/cell_maze/cell_maze_p04_01.map \
  # "python sample_bots/python/HunterBot.py" \
  # "python sample_bots/python/LeftyBot.py" \
  # "python sample_bots/python/GreedyBot.py"

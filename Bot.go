@@ -17,9 +17,6 @@ type Bot struct {
 }
 
 func (this *Bot) Ready() {
-    //PrepareRadius2Tables(attackradius2)
-    //PrepareRadius2Tables(viewradius2)
-    //PrepareRadius2Tables(SITUATION_RADIUS2)
     VerifySituationSize()
 
     this.terrain = new(Terrain)
@@ -33,7 +30,9 @@ func (this *Bot) Ready() {
     this.reinforcement = NewReinforcement(this.terrain, this.army, this.distanceToTrouble)
     this.command = NewCommand(this.terrain, this.army, this.predictions, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom, this.reinforcement)
 
-    this.hud = NewLog("hud", "txt")
+    if debug {
+        this.hud = NewLog("hud", "txt")
+    }
 }
 
 func (this *Bot) Turn() {
@@ -77,32 +76,37 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     this.command.ForEach(func(move Move) {
         issueOrder(move.from.row, move.from.col, move.dir.Char())
     })
-    done()
 
     time := now() - startTime
 
-    this.hud.WriteString(fmt.Sprintf("\n%v\n", this.ColorString()))
-    this.hud.
-    WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dF %3v, dT %3v, dD %3v, re %3v, comm %3v)",
-            turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
+    if debug {
+        this.hud.WriteString(fmt.Sprintf("\n%v\n", this.ColorString()))
+        this.hud.
+        WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dF %3v, dT %3v, dD %3v, re %3v, comm %3v)",
+                turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
+        this.hud.Sync()
+        //NewLog("time", "txt").
+        //WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dF %3v, dT %3v, dD %3v, re %3v, comm %3v)\n",
+        //        turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
 
-    //NewLog("time", "txt").
-    //WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dF %3v, dT %3v, dD %3v, re %3v, comm %3v)\n",
-    //        turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
+        //NewTurnLog("map", "txt").WriteString(this.terrain.String())
+        //NewTurnLog("mystery", "txt").WriteString(this.mystery.String())
+        //NewTurnLog("potentialEnemy", "txt").WriteString(this.potentialEnemy.String())
+        //NewTurnLog("forageScent", "txt").WriteString(this.forageScent.String())
+        //NewTurnLog("forageScent", "csv").WriteString(this.forageScent.Csv())
+        //NewTurnLog("battleScent", "txt").WriteString(this.battleScent.String())
+        //NewTurnLog("battleScent", "csv").WriteString(this.battleScent.Csv())
+        //NewTurnLog("army", "txt").WriteString(this.army.String())
+        //NewTurnLog("distanceToTrouble", "txt").WriteString(this.distanceToTrouble.String())
+    }
 
-    //NewTurnLog("map", "txt").WriteString(this.terrain.String())
-    //NewTurnLog("mystery", "txt").WriteString(this.mystery.String())
-    //NewTurnLog("potentialEnemy", "txt").WriteString(this.potentialEnemy.String())
-    //NewTurnLog("forageScent", "txt").WriteString(this.forageScent.String())
-    //NewTurnLog("forageScent", "csv").WriteString(this.forageScent.Csv())
-    //NewTurnLog("battleScent", "txt").WriteString(this.battleScent.String())
-    //NewTurnLog("battleScent", "csv").WriteString(this.battleScent.Csv())
-    //NewTurnLog("army", "txt").WriteString(this.army.String())
-    //NewTurnLog("distanceToTrouble", "txt").WriteString(this.distanceToTrouble.String())
+    done()
 }
 
 func (this *Bot) End() {
-    this.hud.WriteString(fmt.Sprintf("\nGame over.\n"))
+    if debug {
+        this.hud.WriteString(fmt.Sprintf("\nGame over.\n"))
+    }
     //for i, count := range counts {
     //    if count > 0 {
     //        fmt.Println("count", i, count)

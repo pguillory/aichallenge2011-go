@@ -1,7 +1,5 @@
 /*
-TODO:
-span 1-square gaps
-use PointQueue
+TODO: use PointQueue
 */
 
 package main

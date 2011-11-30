@@ -1,13 +1,6 @@
 /*
-TODO:
-break into two modules
-tactical
-scent-based
-
-don't rampage wastefully
-eliminate swaps
-prune berzerker-1 moves assuming the enemy will STAY
-rush a hill if someone else is bout to cap it
+TODO: break into two modules: tactical vs scent-based
+TODO: rush a hill if someone else is bout to cap it
 */
 
 package main
@@ -60,7 +53,7 @@ func (this *Command) Reset() {
         if s.HasFriendlyAnt() {
             this.moves.IncludeAllFrom(p)
         } else if s.HasEnemyAnt() {
-            // TODO
+            // TODO: should this include berzerkers also?
             if distanceToSoldier.At(p) < 6 {
                 this.enemyMoves.IncludeAllFrom(p)
             } else {
@@ -183,6 +176,8 @@ func (this *Command) PruneOutfocusedMoves() {
     //log.WriteString(fmt.Sprintf("\ntimer %v\n", timer))
 }
 
+// TODO: beseech allies to "make them pay"
+// TODO: don't retreat into dead ends, short ones anyway
 func (this *Command) DoomedAntsTakeHeart() {
     //log := NewTurnLog("DoomedAntsTakeHeart", "txt")
 
@@ -204,6 +199,20 @@ func (this *Command) DoomedAntsTakeHeart() {
 func (this *Command) PickBestMoves() {
     //log := NewTurnLog("PickBestMoves", "txt")
 
+    // TODO
+    // return an EvaluatedMoveSet
+    // ignores hills!
+    //timer.Start("forage")
+    forageMoves := ForageMoves(this.terrain)
+    //.ForEach(func(move Move) {
+    //    if !this.terrain.At(move.Destination()).HasFood() {
+    //        this.moves.Select(move)
+    //    }
+    //})
+    //timer.Stop()
+
+    //fmt.Println(forageMoves)
+
     //foragers := AssignForagers(this.terrain)
 
     //var distanceToFewerFriendliesThan [10]*TravelDistance
@@ -221,8 +230,8 @@ func (this *Command) PickBestMoves() {
         //    result += float32(this.distanceToFood.At(move.from))
         //    result -= float32(this.distanceToFood.At(destination))
         case this.reinforcement.At(move.from):
-           result += float32(this.distanceToDoom.At(move.from))
-           result -= float32(this.distanceToDoom.At(destination))
+            result += float32(this.distanceToDoom.At(move.from))
+            result -= float32(this.distanceToDoom.At(destination))
         //case this.distanceToTrouble.At(move.from) > 25:
         //    friendlies := this.terrain.VisibleFriendliesAt(move.from)
         //    if friendlies > 9 {
@@ -235,25 +244,30 @@ func (this *Command) PickBestMoves() {
             result -= float32(this.distanceToTrouble.At(destination))
 
             // discourage foragers from following each other
-            if this.terrain.At(destination).HasFriendlyAnt() {
-                result -= 0.1
-            }
+            //if this.terrain.At(destination).HasFriendlyAnt() {
+            //    result -= 0.1
+            //}
+        }
+
+        if forageMoves.Includes(move) {
+            //fmt.Printf("%v is a forage move\n", move)
+            result += 19.0
         }
 
         switch {
         case this.army.IsScoutAt(move.from):
             fromFocus := this.friendlyFocus.At(move.from)
             if fromFocus >= this.maxFriendlyFocus.At(move.from) {
-               result += float32(fromFocus * 10)
+               result += float32(fromFocus * 20)
             } else {
-               result -= float32(fromFocus * 10)
+               result -= float32(fromFocus * 20)
             }
         
             toFocus := this.friendlyFocus.At(destination)
             if toFocus >= this.maxFriendlyFocus.At(destination) {
-               result -= float32(toFocus * 10)
+               result -= float32(toFocus * 20)
             } else {
-               result += float32(toFocus * 10)
+               result += float32(toFocus * 20)
             }
         case this.army.IsSoldierAt(move.from):
             fromFocus := this.friendlyFocus.At(move.from)
@@ -270,6 +284,14 @@ func (this *Command) PickBestMoves() {
                result += float32(toFocus * 10)
             }
         }
+
+        if result > 0 {
+            result = (result * result)
+        } else {
+            result = -(result * result)
+        }
+
+        //fmt.Printf("considering move: %v -- %v\n", move, result)
 
         return result
     })
@@ -325,12 +347,6 @@ func (this *Command) Calculate() {
 
     timer.Start("reinvigorate")
     this.DoomedAntsTakeHeart()
-    timer.Stop()
-
-    timer.Start("forage")
-    ForageMoves(this.terrain).ForEach(func(move Move) {
-        this.moves.Select(move)
-    })
     timer.Stop()
 
     timer.Start("pick")

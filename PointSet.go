@@ -86,6 +86,7 @@ func (this *PointSet) String() string {
 }
 
 /*
+// TODO: make this optimized version work
 const POINTSET_BITSIZE = MAX_ROWS * MAX_COLS
 const POINTSET_INTSIZE = (POINTSET_BITSIZE + 31) / 32
 

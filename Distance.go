@@ -116,9 +116,6 @@ func DistanceToDoom(terrain *Terrain, mystery *Mystery, potentialEnemy *Potentia
 }
 
 func DistanceToSoldier(terrain *Terrain, army *Army) *TravelDistance {
-    // TODO
-    //not tested!
-
     distance := NewTravelDistance(func(p Point) Distance {
         switch {
         case terrain.At(p).HasFriendlyAnt() && army.IsSoldierAt(p):

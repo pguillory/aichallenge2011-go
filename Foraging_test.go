@@ -94,3 +94,24 @@ func TestForageAroundObstacles(t *testing.T) {
         t.Error(moves)
     }
 }
+
+func TestSpawnedNextToFood(t *testing.T) {
+    terrain := NewTerrain(
+        "%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+        "%...........*...........%\n" +
+        "%.......................%\n" +
+        "%.......................%\n" +
+        "%...........A...........%\n" +
+        "%...........*...........%\n" +
+        "%.......................%\n" +
+        "%.......................%\n" +
+        "%.......................%\n" +
+        "%%%%%%%%%%%%%%%%%%%%%%%%%")
+    expected := EAST | WEST | STAY
+
+    moves := ForageMoves(terrain)
+
+    if moves.At(Point{4, 12}) != expected {
+        t.Error(moves)
+    }
+}

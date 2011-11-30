@@ -1,5 +1,7 @@
 package main
 
+var debug = false
+
 const (
     MAX_ROWS = 200
     MAX_COLS = 200
