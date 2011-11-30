@@ -19,11 +19,10 @@ func TestFollowScentThroughMaze(t *testing.T) {
     predictions := NewPredictions(terrain)
     mystery := NewMystery(terrain)
     potentialEnemy := NewPotentialEnemy(terrain)
-    distanceToFood := DistanceToFood(terrain)
     distanceToTrouble := DistanceToTrouble(terrain, mystery, potentialEnemy)
     distanceToDoom := DistanceToTrouble(terrain, mystery, potentialEnemy)
     reinforcement := NewReinforcement(terrain, army, distanceToTrouble)
-    command := NewCommand(terrain, army, predictions, distanceToFood, distanceToTrouble, distanceToDoom, reinforcement)
+    command := NewCommand(terrain, army, predictions, distanceToTrouble, distanceToDoom, reinforcement)
 
     if command.At(Point{1, 1}) != SOUTH {
         //t.Error(forageScent)
@@ -51,11 +50,10 @@ func TestMoves(t *testing.T) {
     predictions := NewPredictions(terrain)
     mystery := NewMystery(terrain)
     potentialEnemy := NewPotentialEnemy(terrain)
-    distanceToFood := DistanceToFood(terrain)
     distanceToTrouble := DistanceToTrouble(terrain, mystery, potentialEnemy)
     distanceToDoom := DistanceToTrouble(terrain, mystery, potentialEnemy)
     reinforcement := NewReinforcement(terrain, army, distanceToTrouble)
-    command := NewCommand(terrain, army, predictions, distanceToFood, distanceToTrouble, distanceToDoom, reinforcement)
+    command := NewCommand(terrain, army, predictions, distanceToTrouble, distanceToDoom, reinforcement)
 
     command.Reset()
     before := command.At(Point{2, 0})

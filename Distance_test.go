@@ -20,32 +20,6 @@ func TestTravelDistance(t *testing.T) {
     }
 }
 
-/*
-func TestAssignForagers(t *testing.T) {
-    terrain := NewTerrain(
-        "%%%%%%%%%%%%%%%%%\n" +
-        "%a.....*%a......%\n" +
-        "%.......%.......%\n" +
-        "%....a..%....a..%\n" +
-        "%%%%%%%%%%%%%%%%%")
-
-    expected :=
-        ".................\n" +
-        ".................\n" +
-        ".................\n" +
-        ".....x...........\n" +
-        "................."
-
-    foragers := AssignForagers(terrain)
-    distanceToFood := DistanceToFood(terrain)
-
-    if foragers.String() != expected {
-        t.Error(terrain)
-        t.Error(foragers)
-        t.Error(distanceToFood)
-    }
-}
-*/
 
 func TestDistanceToSoldier(t *testing.T) {
     terrain := NewTerrain(

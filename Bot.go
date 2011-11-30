@@ -9,7 +9,7 @@ type Bot struct {
     potentialEnemy *PotentialEnemy
     army *Army
     predictions *Predictions
-    distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
+    distanceToTrouble, distanceToDoom *TravelDistance
     reinforcement *Reinforcement
     command *Command
     hud *os.File
@@ -24,11 +24,10 @@ func (this *Bot) Ready() {
     this.potentialEnemy = NewPotentialEnemy(this.terrain)
     this.army = NewArmy(this.terrain)
     this.predictions = NewPredictions(this.terrain)
-    this.distanceToFood = DistanceToFood(this.terrain)
     this.distanceToTrouble = DistanceToTrouble(this.terrain, this.mystery, this.potentialEnemy)
     this.distanceToDoom = DistanceToDoom(this.terrain, this.mystery, this.potentialEnemy)
     this.reinforcement = NewReinforcement(this.terrain, this.army, this.distanceToTrouble)
-    this.command = NewCommand(this.terrain, this.army, this.predictions, this.distanceToFood, this.distanceToTrouble, this.distanceToDoom, this.reinforcement)
+    this.command = NewCommand(this.terrain, this.army, this.predictions, this.distanceToTrouble, this.distanceToDoom, this.reinforcement)
 
     if debug {
         this.hud = NewLog("hud", "txt")
@@ -67,7 +66,6 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     this.potentialEnemy.Calculate()
     this.army.Calculate()
     this.predictions.Calculate()
-    this.distanceToFood.Calculate()
     this.distanceToTrouble.Calculate()
     this.distanceToDoom.Calculate()
     this.reinforcement.Calculate()
@@ -82,12 +80,9 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     if debug {
         this.hud.WriteString(fmt.Sprintf("\n%v\n", this.ColorString()))
         this.hud.
-        WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dF %3v, dT %3v, dD %3v, re %3v, comm %3v)",
-                turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
+        WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dT %3v, dD %3v, re %3v, comm %3v)",
+                turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
         this.hud.Sync()
-        //NewLog("time", "txt").
-        //WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dF %3v, dT %3v, dD %3v, re %3v, comm %3v)\n",
-        //        turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToFood.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
 
         //NewTurnLog("map", "txt").WriteString(this.terrain.String())
         //NewTurnLog("mystery", "txt").WriteString(this.mystery.String())

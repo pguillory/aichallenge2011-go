@@ -13,7 +13,7 @@ type Command struct {
     terrain *Terrain
     army *Army
     predictions *Predictions
-    distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance
+    distanceToTrouble, distanceToDoom *TravelDistance
     reinforcement *Reinforcement
     moves, enemyMoves *MoveSet
     enemies *PointSet
@@ -23,12 +23,11 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToFood, distanceToTrouble, distanceToDoom *TravelDistance, reinforcement *Reinforcement) *Command {
+func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToTrouble, distanceToDoom *TravelDistance, reinforcement *Reinforcement) *Command {
     this := new(Command)
     this.terrain = terrain
     this.army = army
     this.predictions = predictions
-    this.distanceToFood = distanceToFood
     this.distanceToTrouble = distanceToTrouble
     this.distanceToDoom = distanceToDoom
     this.reinforcement = reinforcement
@@ -226,9 +225,6 @@ func (this *Command) PickBestMoves() {
         var result float32
 
         switch {
-        //case foragers.Includes(move.from):
-        //    result += float32(this.distanceToFood.At(move.from))
-        //    result -= float32(this.distanceToFood.At(destination))
         case this.reinforcement.At(move.from):
             result += float32(this.distanceToDoom.At(move.from))
             result -= float32(this.distanceToDoom.At(destination))

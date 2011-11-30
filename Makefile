@@ -15,6 +15,7 @@ GOFILES=\
 	PotentialEnemy.go\
 	Scrum.go\
 	Distance.go\
+	Tier.go\
 	Situation.go\
 	Prediction.go\
 	Army.go\

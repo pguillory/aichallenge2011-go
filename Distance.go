@@ -28,26 +28,26 @@ func DistanceToFriendlyHill(terrain *Terrain) *TravelDistance {
     }, 20)
 }
 
-func DistanceToFood(terrain *Terrain) *TravelDistance {
-    distance := NewTravelDistance(func(p Point) Distance {
-        square := terrain.At(p)
-        switch {
-        case terrain.At(p).HasEnemyHill():
-            return 0
-        case square.HasFood():
-            return 2
-        }
-        return MAX_TRAVEL_DISTANCE
-    }, func(p Point, distance Distance, dir Direction) bool {
-        square := terrain.At(p)
-        return square.HasLand()
-    }, func(p Point, distance Distance, dir Direction) bool {
-        square := terrain.At(p)
-        return square.HasLand()
-    }, 22)
-
-    return distance
-}
+//func DistanceToFood(terrain *Terrain) *TravelDistance {
+//    distance := NewTravelDistance(func(p Point) Distance {
+//        square := terrain.At(p)
+//        switch {
+//        case terrain.At(p).HasEnemyHill():
+//            return 0
+//        case square.HasFood():
+//            return 2
+//        }
+//        return MAX_TRAVEL_DISTANCE
+//    }, func(p Point, distance Distance, dir Direction) bool {
+//        square := terrain.At(p)
+//        return square.HasLand()
+//    }, func(p Point, distance Distance, dir Direction) bool {
+//        square := terrain.At(p)
+//        return square.HasLand()
+//    }, 22)
+//
+//    return distance
+//}
 
 //func DistanceToFewerFriendliesThan(max byte, terrain *Terrain) *TravelDistance {
 //    return NewTravelDistance(func(p Point) Distance {

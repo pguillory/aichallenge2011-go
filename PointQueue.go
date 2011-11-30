@@ -33,6 +33,10 @@ func (this *PointQueue) Clear() {
     this.start = this.end
 }
 
+func (this *PointQueue) Empty() bool {
+    return (this.end == this.start)
+}
+
 func (this *PointQueue) Size() int {
     return (this.end - this.start + POINTQUEUE_CAPACITY) % POINTQUEUE_CAPACITY
 }
