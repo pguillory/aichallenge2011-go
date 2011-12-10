@@ -1,5 +1,6 @@
 package main
 
+/*
 type Reinforcement struct {
     time int64
     turn int
@@ -97,3 +98,4 @@ func (this *Reinforcement) String() string {
         return '.'
     })
 }
+*/

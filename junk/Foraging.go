@@ -6,6 +6,7 @@ TODO: re-order unclaimed food by distance to ant after each food claimed
 
 package main
 
+/*
 //import "fmt"
 
 func ForageMoves(terrain *Terrain) *MoveSet {
@@ -176,3 +177,4 @@ func ForageMoves(terrain *Terrain) *MoveSet {
 //A. 0a 0. A.
 //*. *. .a ..
 //.. .. .. .a
+*/

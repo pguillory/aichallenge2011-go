@@ -6,6 +6,8 @@ type Distance uint16
 
 const MAX_TRAVEL_DISTANCE = Distance(MAX_ROWS * MAX_COLS)
 
+/*
+
 type TravelDistance struct {
     time int64
     turn int
@@ -133,36 +135,34 @@ func DistanceToSoldier(terrain *Terrain, army *Army) *TravelDistance {
     return distance
 }
 
-/*
-func AssignForagers(terrain *Terrain) *PointSet {
-    land := new(PointSet)
-    food := new(PointSet)
-    availableAnts := new(PointSet)
-    foragers := new(PointSet)
-
-    ForEachPoint(func(p Point) {
-        if terrain.At(p).HasLand() {
-            land.Include(p)
-        }
-        if terrain.At(p).HasFood() {
-            food.Include(p)
-        }
-        if terrain.At(p).HasFriendlyAnt() {
-            availableAnts.Include(p)
-        }
-    })
-
-    food.ForEach(func(p Point) {
-        move, found := FindNearestMoveTo(p, 20, land, availableAnts)
-        if found {
-            availableAnts.Exclude(move.from)
-            foragers.Include(move.from)
-        }
-    })
-
-    return foragers
-}
-*/
+//func AssignForagers(terrain *Terrain) *PointSet {
+//    land := new(PointSet)
+//    food := new(PointSet)
+//    availableAnts := new(PointSet)
+//    foragers := new(PointSet)
+//
+//    ForEachPoint(func(p Point) {
+//        if terrain.At(p).HasLand() {
+//            land.Include(p)
+//        }
+//        if terrain.At(p).HasFood() {
+//            food.Include(p)
+//        }
+//        if terrain.At(p).HasFriendlyAnt() {
+//            availableAnts.Include(p)
+//        }
+//    })
+//
+//    food.ForEach(func(p Point) {
+//        move, found := FindNearestMoveTo(p, 20, land, availableAnts)
+//        if found {
+//            availableAnts.Exclude(move.from)
+//            foragers.Include(move.from)
+//        }
+//    })
+//
+//    return foragers
+//}
 
 func WhichWay(origin, destination, nextDestination Point, passablePoints *PointSet) (result Direction) {
     checked := new(PointSet)
@@ -253,8 +253,8 @@ func (this *TravelDistance) Calculate() {
     this.turn = turn
 }
 
-func (this *TravelDistance) At(p Point) int {
-    return int(this.value[p.row][p.col])
+func (this *TravelDistance) At(p Point) Distance {
+    return this.value[p.row][p.col]
 }
 
 func (this *TravelDistance) String() string {
@@ -269,3 +269,4 @@ func (this *TravelDistance) String() string {
         return '+'
     })
 }
+*/

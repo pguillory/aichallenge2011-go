@@ -7,24 +7,6 @@ type Point struct {
     row, col int
 }
 
-/*
-func (this Point) AssertValid() {
-    if this.row < 0 {
-        fmt.Printf("row: %v or %#v\n", this.row, this.row)
-        panic("Row too low")
-    }
-    if this.row >= MAX_ROWS {
-        panic("Row too high")
-    }
-    if this.col < 0 {
-        panic("Col too low")
-    }
-    if this.col >= MAX_COLS {
-        panic("Col too high")
-    }
-}
-*/
-
 func (this Point) Normalize() (result Point) {
     result.row = normalizeRow(this.row)
     result.col = normalizeCol(this.col)
@@ -119,6 +101,26 @@ func ForEachPointWithinManhattanDistance(p Point, distance int, f func(Point)) {
        for d.col, s.col = -distance, 0; d.col <= distance && s.col < cols; d.col, s.col = d.col + 1, s.col + 1 {
            f(p.Plus(d))
        }
+   }
+}
+
+func ForEachPointOnSquare(p Point, distance int, f func(Point)) {
+   var d Point
+   d.row = -distance
+   for d.col = -distance + 1; d.col <= distance; d.col++ {
+       f(p.Plus(d))
+   }
+   d.row = distance
+   for d.col = -distance; d.col <= distance - 1; d.col++ {
+       f(p.Plus(d))
+   }
+   d.col = -distance
+   for d.row = -distance; d.row <= distance - 1; d.row++ {
+       f(p.Plus(d))
+   }
+   d.col = distance
+   for d.row = -distance + 1; d.row <= distance; d.row++ {
+       f(p.Plus(d))
    }
 }
 

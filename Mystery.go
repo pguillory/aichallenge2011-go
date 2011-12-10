@@ -1,7 +1,7 @@
 package main
 
-const STARTING_MYSTERY = 100
-const MAX_MYSTERY = 100
+const STARTING_MYSTERY = byte(100)
+const MAX_MYSTERY = byte(100)
 
 type Mystery struct {
     time int64
@@ -45,6 +45,10 @@ func (this *Mystery) Calculate() {
 
 func (this *Mystery) At(p Point) byte {
     return this.values[p.row][p.col]
+}
+
+func (this *Mystery) UnexploredAt(p Point) bool {
+    return (this.values[p.row][p.col] == MAX_MYSTERY)
 }
 
 func (this *Mystery) String() string {

@@ -7,10 +7,9 @@ type Bot struct {
     terrain, update *Terrain
     mystery *Mystery
     potentialEnemy *PotentialEnemy
-    army *Army
+    search *Search
     predictions *Predictions
-    distanceToTrouble, distanceToDoom *TravelDistance
-    reinforcement *Reinforcement
+    //reinforcement *Reinforcement
     command *Command
     hud *os.File
     hudCenter Point
@@ -22,12 +21,10 @@ func (this *Bot) Ready() {
     this.terrain = new(Terrain)
     this.mystery = NewMystery(this.terrain)
     this.potentialEnemy = NewPotentialEnemy(this.terrain)
-    this.army = NewArmy(this.terrain)
+    this.search = NewSearch(this.terrain, this.mystery, this.potentialEnemy)
     this.predictions = NewPredictions(this.terrain)
-    this.distanceToTrouble = DistanceToTrouble(this.terrain, this.mystery, this.potentialEnemy)
-    this.distanceToDoom = DistanceToDoom(this.terrain, this.mystery, this.potentialEnemy)
-    this.reinforcement = NewReinforcement(this.terrain, this.army, this.distanceToTrouble)
-    this.command = NewCommand(this.terrain, this.army, this.predictions, this.distanceToTrouble, this.distanceToDoom, this.reinforcement)
+    //this.reinforcement = NewReinforcement(this.terrain, this.army, this.distanceToTrouble)
+    this.command = NewCommand(this.terrain, this.search, this.predictions)
 
     if debug {
         this.hud = NewLog("hud", "txt")
@@ -64,11 +61,9 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
 
     this.mystery.Calculate()
     this.potentialEnemy.Calculate()
-    this.army.Calculate()
+    this.search.Calculate()
     this.predictions.Calculate()
-    this.distanceToTrouble.Calculate()
-    this.distanceToDoom.Calculate()
-    this.reinforcement.Calculate()
+    //this.reinforcement.Calculate()
     this.command.Calculate()
 
     this.command.ForEach(func(move Move) {
@@ -80,8 +75,8 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     if debug {
         this.hud.WriteString(fmt.Sprintf("\n%v\n", this.ColorString()))
         this.hud.
-        WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dT %3v, dD %3v, re %3v, comm %3v)",
-                turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
+        WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, search %3v, pred %3v, re %3v, comm %3v)",
+                turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.search.time, this.predictions.time, 999, this.command.time))
         this.hud.Sync()
 
         //NewTurnLog("map", "txt").WriteString(this.terrain.String())
@@ -102,11 +97,6 @@ func (this *Bot) End() {
     if debug {
         this.hud.WriteString(fmt.Sprintf("\nGame over.\n"))
     }
-    //for i, count := range counts {
-    //    if count > 0 {
-    //        fmt.Println("count", i, count)
-    //    }
-    //}
 }
 
 func (this *Bot) ColorString() string {
@@ -157,19 +147,21 @@ func (this *Bot) ColorString() string {
             case s.HasAnt():
                 cc.symbol = string('a' + byte(s.owner))
                 if s.IsFriendly() {
-                    switch {
-                    case this.army.IsScoutAt(p):
+                    //switch {
+                    //case this.tier.At(p) == 1:
                         cc.foreground = GREEN
-                    case this.army.IsSoldierAt(p):
-                        cc.foreground = CYAN
-                    case this.army.IsBerzerkerAt(p):
-                        cc.foreground = MAGENTA
-                    default:
-                        cc.foreground = WHITE
-                    }
-                    if this.reinforcement.At(p) {
-                        cc.foreground += BRIGHT
-                    }
+                    //case this.tier.At(p) == 2:
+                    //    cc.foreground = CYAN
+                    //case this.tier.At(p) == 3:
+                    //    cc.foreground = BRIGHT + CYAN
+                    //case this.tier.At(p) >= 4:
+                    //    cc.foreground = MAGENTA
+                    //default:
+                    //    cc.foreground = WHITE
+                    //}
+                    //if this.reinforcement.At(p) {
+                    //    cc.foreground += BRIGHT
+                    //}
                 } else {
                     cc.foreground = RED
                 }

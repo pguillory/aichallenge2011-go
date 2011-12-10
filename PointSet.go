@@ -4,6 +4,28 @@ package main
 
 type PointSet [MAX_ROWS][MAX_COLS]bool
 
+func Everywhere() *PointSet {
+    this := new(PointSet)
+    ForEachPoint(func(p Point) {
+        this[p.row][p.col] = true
+    })
+    return this
+}
+
+func Nowhere() *PointSet {
+    return new(PointSet)
+}
+
+func Where(f func(Point) bool) *PointSet {
+    this := new(PointSet)
+    ForEachPoint(func(p Point) {
+        if f(p) {
+            this[p.row][p.col] = true
+        }
+    })
+    return this
+}
+
 func (this *PointSet) Include(p Point) {
     this[p.row][p.col] = true
 }

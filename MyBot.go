@@ -8,6 +8,7 @@ import "strconv"
 import "rand"
 import "fmt"
 import "flag"
+
 //import "os/signal"
 //import "runtime/debug"
 
@@ -25,7 +26,7 @@ func main() {
     //    }
     //}()
 
-	var bot Bot
+    var bot Bot
 
     stdin := bufio.NewReader(os.Stdin)
     for {
@@ -36,11 +37,11 @@ func main() {
             switch words[0] {
             case "go":
                 bot.Go(func(row, col int, dir byte) {
-                    fmt.Printf("o %v %v %c\n", row, col, dir)
+                    //fmt.Printf("o %v %v %c\n", row, col, dir)
                 }, func() {
-                    fmt.Println("go")
+                    //fmt.Println("go")
                     os.Stdout.Sync()
-                	runtime.GC()
+                    runtime.GC()
                 })
             case "ready":
                 bot.Ready()
@@ -74,8 +75,8 @@ func main() {
             case "spawnradius2":
                 spawnradius2, _ = strconv.Atoi(words[1])
             case "player_seed":
-    			player_seed, _ := strconv.Atoi64(words[1])
-    			rand.Seed(player_seed)
+                player_seed, _ := strconv.Atoi64(words[1])
+                rand.Seed(player_seed)
             }
         case 3:
             switch words[0] {

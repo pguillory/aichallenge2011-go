@@ -126,3 +126,32 @@ func TestForEachNeighbor(t *testing.T) {
         t.Errorf("count: %v", count)
     }
 }
+
+func TestForEachPointOnSquare(t *testing.T) {
+    rows = 10
+    cols = 10
+
+    expected :=
+	    "....x...x.\n" +
+	    "....x...x.\n" +
+	    "....x...x.\n" +
+	    "....x...x.\n" +
+	    "xxxxx...xx\n" +
+	    "..........\n" +
+	    "..........\n" +
+	    "..........\n" +
+	    "xxxxx...xx\n" +
+	    "....x...x."
+
+    checked := new(PointSet)
+    ForEachPointOnSquare(Point{1, 1}, 3, func(p2 Point) {
+        if checked.Includes(p2) {
+            t.Errorf("Already checked %v", p2)
+        }
+        checked.Include(p2)
+    })
+    
+    if checked.String() != expected {
+        t.Error(checked)
+    }
+}

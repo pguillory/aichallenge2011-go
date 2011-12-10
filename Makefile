@@ -7,15 +7,17 @@ GOFILES=\
 	Point.go\
 	PointSet.go\
 	PointQueue.go\
+	Queue.go\
+	SearchEngine.go\
+	Goals.go\
+	Search.go\
 	Player.go\
 	Square.go\
 	Terrain.go\
-	Foraging.go\
 	Mystery.go\
 	PotentialEnemy.go\
 	Scrum.go\
 	Distance.go\
-	Tier.go\
 	Situation.go\
 	Prediction.go\
 	Army.go\

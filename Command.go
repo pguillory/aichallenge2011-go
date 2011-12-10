@@ -11,10 +11,9 @@ type Command struct {
     time int64
     turn int
     terrain *Terrain
-    army *Army
+    search *Search
     predictions *Predictions
-    distanceToTrouble, distanceToDoom *TravelDistance
-    reinforcement *Reinforcement
+    //reinforcement *Reinforcement
     moves, enemyMoves *MoveSet
     enemies *PointSet
     enemyDestinations *PointSet
@@ -23,14 +22,12 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToTrouble, distanceToDoom *TravelDistance, reinforcement *Reinforcement) *Command {
+func NewCommand(terrain *Terrain, search *Search, predictions *Predictions) *Command {
     this := new(Command)
     this.terrain = terrain
-    this.army = army
+    this.search = search
     this.predictions = predictions
-    this.distanceToTrouble = distanceToTrouble
-    this.distanceToDoom = distanceToDoom
-    this.reinforcement = reinforcement
+    //this.reinforcement = reinforcement
 
     this.Calculate()
     return this
@@ -45,7 +42,7 @@ func (this *Command) Reset() {
     this.enemyMoves = new(MoveSet)
     this.enemies = new(PointSet)
 
-    distanceToSoldier := DistanceToSoldier(this.terrain, this.army)
+    //distanceToSoldier := DistanceToSoldier(this.terrain, this.army)
 
     ForEachPoint(func(p Point) {
         s := this.terrain.At(p)
@@ -53,11 +50,11 @@ func (this *Command) Reset() {
             this.moves.IncludeAllFrom(p)
         } else if s.HasEnemyAnt() {
             // TODO: should this include berzerkers also?
-            if distanceToSoldier.At(p) < 6 {
-                this.enemyMoves.IncludeAllFrom(p)
-            } else {
+            //if distanceToSoldier.At(p) < 6 {
+            //    this.enemyMoves.IncludeAllFrom(p)
+            //} else {
                 this.enemyMoves.Include(Move{p, this.predictions.At(p)})
-            }
+            //}
             this.enemies.Include(p)
         }
     })
@@ -115,7 +112,7 @@ func (this *Command) PruneOutfocusedMoves() {
 
         timer.Start("maxFriendlyFocus")
         this.maxFriendlyFocus = MaxFocus(this.enemyDestinations, enemyFocus)
-        this.maxFriendlyFocus_STAY = MaxFocus(this.enemies, enemyFocus)
+        //this.maxFriendlyFocus_STAY = MaxFocus(this.enemies, enemyFocus)
         timer.Stop()
         //log.WriteString(fmt.Sprintf("maxFriendlyFocus: %v ms\n", timer.times["maxFriendlyFocus"]))
 
@@ -124,8 +121,8 @@ func (this *Command) PruneOutfocusedMoves() {
         timer.Start("excluding moves")
         this.moves.ForEach(func(move Move) {
             p := move.Destination()
-            switch {
-            case this.army.IsScoutAt(move.from):
+            //switch {
+            //case this.tier.At(move.from) <= 1:
                 if this.friendlyFocus.At(p) >= this.maxFriendlyFocus.At(p) {
                     this.moves.Exclude(move)
                     changed = true
@@ -133,25 +130,23 @@ func (this *Command) PruneOutfocusedMoves() {
                         changedPoints.Include(p2)
                     })
                 }
-            case this.army.IsSoldierAt(move.from):
-                if this.friendlyFocus.At(p) > this.maxFriendlyFocus.At(p) {
-                    this.moves.Exclude(move)
-                    changed = true
-                    ForEachPointWithinRadius2(p, 19, func(p2 Point) {
-                        changedPoints.Include(p2)
-                    })
-                }
-            case this.army.IsBerzerkerAt(move.from):
-               if this.friendlyFocus.At(p) > this.maxFriendlyFocus_STAY.At(p) {
-                   this.moves.Exclude(move)
-                   changed = true
-                   ForEachPointWithinRadius2(p, 19, func(p2 Point) {
-                       changedPoints.Include(p2)
-                   })
-               }
-            default:
-                panic("What is it then?")
-            }
+            //case this.tier.At(move.from) <= 2:
+            //    if this.friendlyFocus.At(p) > this.maxFriendlyFocus.At(p) {
+            //        this.moves.Exclude(move)
+            //        changed = true
+            //        ForEachPointWithinRadius2(p, 19, func(p2 Point) {
+            //            changedPoints.Include(p2)
+            //        })
+            //    }
+            //case this.tier.At(move.from) <= 5:
+            //   if this.friendlyFocus.At(p) > this.maxFriendlyFocus_STAY.At(p) {
+            //       this.moves.Exclude(move)
+            //       changed = true
+            //       ForEachPointWithinRadius2(p, 19, func(p2 Point) {
+            //           changedPoints.Include(p2)
+            //       })
+            //   }
+            //}
         })
         timer.Stop()
 
@@ -202,7 +197,9 @@ func (this *Command) PickBestMoves() {
     // return an EvaluatedMoveSet
     // ignores hills!
     //timer.Start("forage")
-    forageMoves := ForageMoves(this.terrain)
+
+    //forageMoves := ForageMoves(this.terrain)
+
     //.ForEach(func(move Move) {
     //    if !this.terrain.At(move.Destination()).HasFood() {
     //        this.moves.Select(move)
@@ -214,72 +211,75 @@ func (this *Command) PickBestMoves() {
 
     //foragers := AssignForagers(this.terrain)
 
-    //var distanceToFewerFriendliesThan [10]*TravelDistance
-    //for i := byte(1); i < 10; i++ {
-    //    distanceToFewerFriendliesThan[i] = DistanceToFewerFriendliesThan(i, this.terrain)
-    //}
-
     list := this.moves.OrderedList(func(move Move) float32 {
         destination := move.Destination()
 
         var result float32
 
         switch {
-        case this.reinforcement.At(move.from):
-            result += float32(this.distanceToDoom.At(move.from))
-            result -= float32(this.distanceToDoom.At(destination))
-        //case this.distanceToTrouble.At(move.from) > 25:
-        //    friendlies := this.terrain.VisibleFriendliesAt(move.from)
-        //    if friendlies > 9 {
-        //        friendlies = 9
-        //    }
-        //    result += float32(distanceToFewerFriendliesThan[friendlies].At(move.from))
-        //    result -= float32(distanceToFewerFriendliesThan[friendlies].At(destination))
+        //case this.reinforcement.At(move.from):
+        //    result += float32(this.distanceToDoom.At(move.from))
+        //    result -= float32(this.distanceToDoom.At(destination))
+
+        //case this.search.moves.Includes(move):
+        //    result += 1
+        //case move.dir != STAY:
+        //    result -= 1
+
         default:
-            result += float32(this.distanceToTrouble.At(move.from))
-            result -= float32(this.distanceToTrouble.At(destination))
-
-            // discourage foragers from following each other
-            //if this.terrain.At(destination).HasFriendlyAnt() {
-            //    result -= 0.1
-            //}
+            distances := this.search.DistancesFor(move.from)
+            result += float32(distances.At(move.from))
+            result -= float32(distances.At(destination))
+            
+        //    result += float32(this.tier.DistanceAt(move.from))
+        //    result -= float32(this.tier.DistanceAt(destination))
+        //    //fmt.Errorf("%v to %v\n", this.tier.DistanceAt(move.from), this.tier.DistanceAt(destination))
+        //    //result += float32(this.distanceToTrouble.At(move.from))
+        //    //result -= float32(this.distanceToTrouble.At(destination))
+        //
+        //    // discourage foragers from following each other
+        //    if this.terrain.At(destination).HasFriendlyAnt() {
+        //        //TODO: try 5.0
+        //        //result -= 2.0
+        //        result -= 0.1
+        //    }
         }
 
-        if forageMoves.Includes(move) {
-            //fmt.Printf("%v is a forage move\n", move)
-            result += 19.0
-        }
+        //if forageMoves.Includes(move) {
+        //    //fmt.Printf("%v is a forage move\n", move)
+        //    result += 19.0
+        //}
 
-        switch {
-        case this.army.IsScoutAt(move.from):
-            fromFocus := this.friendlyFocus.At(move.from)
-            if fromFocus >= this.maxFriendlyFocus.At(move.from) {
-               result += float32(fromFocus * 20)
-            } else {
-               result -= float32(fromFocus * 20)
-            }
-        
-            toFocus := this.friendlyFocus.At(destination)
-            if toFocus >= this.maxFriendlyFocus.At(destination) {
-               result -= float32(toFocus * 20)
-            } else {
-               result += float32(toFocus * 20)
-            }
-        case this.army.IsSoldierAt(move.from):
-            fromFocus := this.friendlyFocus.At(move.from)
-            if fromFocus > this.maxFriendlyFocus.At(move.from) {
-               result += float32(fromFocus * 10)
-            } else {
-               result -= float32(fromFocus * 10)
-            }
-        
-            toFocus := this.friendlyFocus.At(destination)
-            if toFocus > this.maxFriendlyFocus.At(destination) {
-               result -= float32(toFocus * 10)
-            } else {
-               result += float32(toFocus * 10)
-            }
-        }
+        //switch {
+        //case this.tier.At(move.from) <= 1:
+        //    fromFocus := this.friendlyFocus.At(move.from)
+        //    if fromFocus >= this.maxFriendlyFocus.At(move.from) {
+        //       result += float32(fromFocus * 20)
+        //    } else {
+        //       result -= float32(fromFocus * 20)
+        //    }
+        //
+        //    toFocus := this.friendlyFocus.At(destination)
+        //    if toFocus >= this.maxFriendlyFocus.At(destination) {
+        //       result -= float32(toFocus * 20)
+        //    } else {
+        //       result += float32(toFocus * 20)
+        //    }
+        //case this.tier.At(move.from) <= 2:
+        //    fromFocus := this.friendlyFocus.At(move.from)
+        //    if fromFocus > this.maxFriendlyFocus.At(move.from) {
+        //       result += float32(fromFocus * 10)
+        //    } else {
+        //       result -= float32(fromFocus * 10)
+        //    }
+        //
+        //    toFocus := this.friendlyFocus.At(destination)
+        //    if toFocus > this.maxFriendlyFocus.At(destination) {
+        //       result -= float32(toFocus * 10)
+        //    } else {
+        //       result += float32(toFocus * 10)
+        //    }
+        //}
 
         if result > 0 {
             result = (result * result)
