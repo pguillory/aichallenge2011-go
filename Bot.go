@@ -11,6 +11,7 @@ type Bot struct {
     predictions *Predictions
     distanceToTrouble, distanceToDoom *TravelDistance
     reinforcement *Reinforcement
+    foraging *Foraging
     command *Command
     hud *os.File
     hudCenter Point
@@ -27,7 +28,8 @@ func (this *Bot) Ready() {
     this.distanceToTrouble = DistanceToTrouble(this.terrain, this.mystery, this.potentialEnemy)
     this.distanceToDoom = DistanceToDoom(this.terrain, this.mystery, this.potentialEnemy)
     this.reinforcement = NewReinforcement(this.terrain, this.army, this.distanceToTrouble)
-    this.command = NewCommand(this.terrain, this.army, this.predictions, this.distanceToTrouble, this.distanceToDoom, this.reinforcement)
+    this.foraging = NewForaging(this.terrain)
+    this.command = NewCommand(this.terrain, this.army, this.predictions, this.distanceToTrouble, this.distanceToDoom, this.reinforcement, this.foraging)
 
     if debug {
         this.hud = NewLog("hud", "txt")
@@ -69,6 +71,7 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     this.distanceToTrouble.Calculate()
     this.distanceToDoom.Calculate()
     this.reinforcement.Calculate()
+    this.foraging.Calculate()
     this.command.Calculate()
 
     this.command.ForEach(func(move Move) {
@@ -80,8 +83,8 @@ func (this *Bot) Go(issueOrder func(int, int, byte), done func()) {
     if debug {
         this.hud.WriteString(fmt.Sprintf("\n%v\n", this.ColorString()))
         this.hud.
-        WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dT %3v, dD %3v, re %3v, comm %3v)",
-                turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.command.time))
+        WriteString(fmt.Sprintf("turn %4v, time %3v (map %3v, myst %3v, potE %3v, army %3v, pred %3v, dT %3v, dD %3v, re %3v, for %3v, comm %3v)",
+                turn, time, this.terrain.time, this.mystery.time, this.potentialEnemy.time, this.army.time, this.predictions.time, this.distanceToTrouble.time, this.distanceToDoom.time, this.reinforcement.time, this.foraging.time, this.command.time))
         this.hud.Sync()
 
         //NewTurnLog("map", "txt").WriteString(this.terrain.String())

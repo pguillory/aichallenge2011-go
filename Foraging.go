@@ -6,9 +6,27 @@ TODO: re-order unclaimed food by distance to ant after each food claimed
 
 package main
 
-//import "fmt"
+type Foraging struct {
+    time int64
+    turn int
+    terrain *Terrain
+    moves *MoveSet
+}
 
-func ForageMoves(terrain *Terrain) *MoveSet {
+func NewForaging(terrain *Terrain) *Foraging {
+    this := new(Foraging)
+    this.terrain = terrain
+
+    this.Calculate()
+    return this
+}
+
+func (this *Foraging) Calculate() {
+    if this.turn == turn {
+        return
+    }
+    startTime := now()
+
     land := new(PointSet)
     hills := new(PointSet)
     unclaimedFood := new(PointSet)
@@ -17,16 +35,16 @@ func ForageMoves(terrain *Terrain) *MoveSet {
     futureAnts := new(PointSet)
 
     ForEachPoint(func(p Point) {
-        if terrain.At(p).HasLand() {
+        if this.terrain.At(p).HasLand() {
             land.Include(p)
         }
-        if terrain.At(p).HasHill() {
+        if this.terrain.At(p).HasHill() {
             hills.Include(p)
         }
-        if terrain.At(p).HasFood() {
+        if this.terrain.At(p).HasFood() {
             unclaimedFood.Include(p)
         }
-        if terrain.At(p).HasFriendlyAnt() {
+        if this.terrain.At(p).HasFriendlyAnt() {
             currentAnts.Include(p)
             availableAnts.Include(p)
             futureAnts.Include(p)
@@ -141,7 +159,8 @@ func ForageMoves(terrain *Terrain) *MoveSet {
         }
     }
 
-    moves := new(MoveSet)
+    this.moves = new(MoveSet)
+
     currentAnts.ForEach(func(p Point) {
         if !availableAnts.Includes(p) {
             destination := destinations[p.row][p.col]
@@ -150,19 +169,20 @@ func ForageMoves(terrain *Terrain) *MoveSet {
             //fmt.Printf("Moving ant at %v to %v\n", p, destination)
 
             dir := WhichWay(p, destination, nextDestination, land)
-            if terrain.At(p.Neighbor(dir)).HasFood() {
-                if terrain.At(p).HasFriendlyHill() {
+            if this.terrain.At(p.Neighbor(dir)).HasFood() {
+                if this.terrain.At(p).HasFriendlyHill() {
                     //fmt.Printf("On hill with food adjacent to %v, going %v or %v\n", dir, dir.Right(), dir.Left())
                     dir = STAY | dir.Right() | dir.Left()
                 } else {
                     dir = STAY
                 }
             }
-            moves.Include(Move{p, dir})
+            this.moves.Include(Move{p, dir})
         }
     })
 
-    return moves
+    this.time = now() - startTime
+    this.turn = turn
 }
 
 // spawned on hill next to food, should we move off or stay?
@@ -176,3 +196,5 @@ func ForageMoves(terrain *Terrain) *MoveSet {
 //A. 0a 0. A.
 //*. *. .a ..
 //.. .. .. .a
+//
+// about the same

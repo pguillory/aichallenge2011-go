@@ -26,10 +26,10 @@ func TestForageMoves(t *testing.T) {
         ".......................\n" +
         "......................."
 
-    moves := ForageMoves(terrain)
+    foraging := NewForaging(terrain)
 
-    if moves.String() != expected {
-        t.Error(moves)
+    if foraging.moves.String() != expected {
+        t.Error(foraging.moves)
     }
 }
 
@@ -57,10 +57,10 @@ func TestForageUsingFutureSpawns(t *testing.T) {
         ".......................\n" +
         "......................."
 
-    moves := ForageMoves(terrain)
+    foraging := NewForaging(terrain)
 
-    if moves.String() != expected {
-        t.Error(moves)
+    if foraging.moves.String() != expected {
+        t.Error(foraging.moves)
     }
 }
 
@@ -88,10 +88,10 @@ func TestForageAroundObstacles(t *testing.T) {
         ".........................\n" +
         "........................."
 
-    moves := ForageMoves(terrain)
+    foraging := NewForaging(terrain)
 
-    if moves.String() != expected {
-        t.Error(moves)
+    if foraging.moves.String() != expected {
+        t.Error(foraging.moves)
     }
 }
 
@@ -109,9 +109,9 @@ func TestSpawnedNextToFood(t *testing.T) {
         "%%%%%%%%%%%%%%%%%%%%%%%%%")
     expected := EAST | WEST | STAY
 
-    moves := ForageMoves(terrain)
+    foraging := NewForaging(terrain)
 
-    if moves.At(Point{4, 12}) != expected {
-        t.Error(moves)
+    if foraging.moves.At(Point{4, 12}) != expected {
+        t.Error(foraging.moves)
     }
 }

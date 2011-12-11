@@ -15,6 +15,7 @@ type Command struct {
     predictions *Predictions
     distanceToTrouble, distanceToDoom *TravelDistance
     reinforcement *Reinforcement
+    foraging *Foraging
     moves, enemyMoves *MoveSet
     enemies *PointSet
     enemyDestinations *PointSet
@@ -23,7 +24,7 @@ type Command struct {
     //len int
 }
 
-func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToTrouble, distanceToDoom *TravelDistance, reinforcement *Reinforcement) *Command {
+func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distanceToTrouble, distanceToDoom *TravelDistance, reinforcement *Reinforcement, foraging *Foraging) *Command {
     this := new(Command)
     this.terrain = terrain
     this.army = army
@@ -31,6 +32,7 @@ func NewCommand(terrain *Terrain, army *Army, predictions *Predictions, distance
     this.distanceToTrouble = distanceToTrouble
     this.distanceToDoom = distanceToDoom
     this.reinforcement = reinforcement
+    this.foraging = foraging
 
     this.Calculate()
     return this
@@ -142,13 +144,13 @@ func (this *Command) PruneOutfocusedMoves() {
                     })
                 }
             case this.army.IsBerzerkerAt(move.from):
-               if this.friendlyFocus.At(p) > this.maxFriendlyFocus_STAY.At(p) {
-                   this.moves.Exclude(move)
-                   changed = true
-                   ForEachPointWithinRadius2(p, 19, func(p2 Point) {
-                       changedPoints.Include(p2)
-                   })
-               }
+               //if this.friendlyFocus.At(p) > this.maxFriendlyFocus_STAY.At(p) {
+               //    this.moves.Exclude(move)
+               //    changed = true
+               //    ForEachPointWithinRadius2(p, 19, func(p2 Point) {
+               //        changedPoints.Include(p2)
+               //    })
+               //}
             default:
                 panic("What is it then?")
             }
@@ -202,15 +204,15 @@ func (this *Command) PickBestMoves() {
     // return an EvaluatedMoveSet
     // ignores hills!
     //timer.Start("forage")
-    forageMoves := ForageMoves(this.terrain)
+
+    //forageMoves := ForageMoves(this.terrain)
+
     //.ForEach(func(move Move) {
     //    if !this.terrain.At(move.Destination()).HasFood() {
     //        this.moves.Select(move)
     //    }
     //})
     //timer.Stop()
-
-    //fmt.Println(forageMoves)
 
     //foragers := AssignForagers(this.terrain)
 
@@ -245,7 +247,7 @@ func (this *Command) PickBestMoves() {
             //}
         }
 
-        if forageMoves.Includes(move) {
+        if this.foraging.moves.Includes(move) {
             //fmt.Printf("%v is a forage move\n", move)
             result += 19.0
         }
